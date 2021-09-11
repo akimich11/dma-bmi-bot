@@ -1,17 +1,18 @@
 import os
 import pickle
-import config
 from telebot import TeleBot, types
-from decorators import admin_only
+import functools
+import config
 
 
 class User:
-    def __init__(self, user_id, username, last_name, first_name, department):
+    def __init__(self, user_id, username, last_name, first_name, department, is_admin):
         self.username = None if username == 'undefined' else username
         self.first_name = first_name
         self.last_name = last_name
-        self.id = None if user_id == 'undefined' else int(user_id)
+        self.id = int(user_id)
         self.department = department
+        self.is_admin = is_admin == 'True'
         self.has_voted = False
 
 
@@ -38,6 +39,20 @@ class PollBot(TeleBot):
             pickle.dump(self.poll, f)
         return result
 
+    def handle_poll_answer(self, poll_answer):
+        if self.poll is not None and self.poll.id == poll_answer.poll_id:
+            all_answers = [option.text for option in self.poll.options]
+            user_answers = [all_answers[i] for i in poll_answer.option_ids]
+            self.users[poll_answer.user.id].has_voted = True
+            if len(user_answers):
+                self.send_message(config.AKIM_ID,
+                                 f'{poll_answer.user.first_name}{f" {poll_answer.user.last_name}" or ""} '
+                                 f'voted for {user_answers} in "{self.poll.question}" poll')
+            else:
+                self.users[poll_answer.user.id].has_voted = False
+                self.send_message(config.AKIM_ID, f'{poll_answer.user.first_name} retracted vote '
+                                                 f'in "{self.poll.question}" poll')
+
     def __clear_poll(self):
         self.poll = None
         with open('poll.pickle', 'wb') as f:
@@ -45,32 +60,25 @@ class PollBot(TeleBot):
 
 
 bot = PollBot(token=config.TOKEN)
+bot.register_poll_answer_handler(bot.handle_poll_answer, None)
 
 
-def handle_poll_answer(poll_answer):
-    if bot.poll is not None and bot.poll.id == poll_answer.poll_id:
-        all_answers = [option.text for option in bot.poll.options]
-        user_answers = [all_answers[i] for i in poll_answer.option_ids]
-        bot.users[poll_answer.user.id].has_voted = True
-        if len(user_answers):
-            bot.send_message(config.AKIM_ID,
-                             f'{poll_answer.user.first_name}{f" {poll_answer.user.last_name}" or ""} '
-                             f'voted for {user_answers} in "{bot.poll.question}" poll')
+def admin_only(func):
+    @functools.wraps(func)
+    def wrapped(message, *args, **kwargs):
+        if bot.users[message.from_user.id].is_admin:
+            return func(message, *args, **kwargs)
         else:
-            bot.users[poll_answer.user.id].has_voted = False
-            bot.send_message(config.AKIM_ID, f'{poll_answer.user.first_name} retracted vote '
-                                             f'in "{bot.poll.question}" poll')
-
-
-bot.register_poll_answer_handler(handle_poll_answer, None)
+            bot.send_message(message.chat.id, 'Команда доступна только старостам')
+    return wrapped
 
 
 @bot.message_handler(commands=['stats'])
 @admin_only
 def send_stats(message):
-    bot.send_message(config.AKIM_ID, f'Не проголосовали:\n' +
-                     '\n'.join([f"@{user.username} ({user.first_name} {user.last_name})"
-                                for user in bot.users.values() if not user.has_voted]))
+    bot.send_message(message.chat.id, f'Не проголосовали:\n' +
+                     '\n'.join([f"[{user.first_name} {user.last_name}](tg://user?id={user.id})"
+                                for user in bot.users.values() if not user.has_voted]), parse_mode='Markdown')
 
 
 @bot.message_handler(content_types=['poll'])
