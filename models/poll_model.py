@@ -38,7 +38,7 @@ class PollModel:
         ignorants = []
         if poll_question is not None:
             for p, v in self.polls.values():
-                if p.question.lower().contains(poll_question.lower()):
+                if poll_question.lower() in p.question.lower():
                     poll, votes = p, v
                     break
             else:
