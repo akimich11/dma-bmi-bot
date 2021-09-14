@@ -8,9 +8,9 @@ import functools
 def admin_only(func):
     @functools.wraps(func)
     def wrapped(message, *args, **kwargs):
-        if message.from_user.id in user_model.users:
-            if user_model.users[message.from_user.id].is_admin:
-                return func(message, *args, **kwargs)
+        user = user_model.users.get(message.from_user.id)
+        if user is not None and user.is_admin:
+            return func(message, *args, **kwargs)
         else:
             bot.send_message(message.chat.id, 'Команда доступна только старостам')
     return wrapped
