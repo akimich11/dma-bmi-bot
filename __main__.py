@@ -8,14 +8,47 @@ import functools
 def admin_only(func):
     @functools.wraps(func)
     def wrapped(message, *args, **kwargs):
-        if user_model.users[message.from_user.id].is_admin:
-            return func(message, *args, **kwargs)
+        if message.from_user.id in user_model.users:
+            if user_model.users[message.from_user.id].is_admin:
+                return func(message, *args, **kwargs)
         else:
             bot.send_message(message.chat.id, 'Команда доступна только старостам')
     return wrapped
 
 
-@bot.message_handler(commands=['poll_stats'])
+@bot.message_handler(commands=['make_admin'])
+def make_admin(message):
+    try:
+        command, last_name = message.text.split()
+        user_model.make_admin(last_name)
+        bot.send_message(message.chat.id, 'одним старостой больше')
+    except ValueError:
+        bot.send_message(message.chat.id, 'wrong format')
+
+
+@bot.message_handler(commands=['remove_admin'])
+def remove_admin(message):
+    try:
+        command, last_name = message.text.split()
+        user_model.remove_admin(last_name)
+        bot.send_message(message.chat.id, 'одним старостой меньше')
+    except ValueError:
+        bot.send_message(message.chat.id, 'wrong format')
+
+
+@bot.message_handler(content_types=['poll'])
+@admin_only
+def reply(message):
+    poll = message.poll
+    bot.send_poll(chat_id=config.AKIM_ID,
+                  question=poll.question,
+                  options=[option.text for option in poll.options],
+                  is_anonymous=poll.is_anonymous,
+                  allows_multiple_answers=poll.allows_multiple_answers
+                  )
+
+
+@bot.message_handler(commands=['tag'])
 @admin_only
 def send_stats(message):
     try:
@@ -51,23 +84,23 @@ def inc_skips(message):
         bot.send_message(message.chat.id, 'wrong format')
 
 
+@bot.message_handler(commands=['set_skips'])
+@admin_only
+def set_skips(message):
+    try:
+        last_name, month, semester = [last_name.capitalize() for last_name in message.text.split()][1:]
+        user_model.set_skips(last_name, int(month), int(semester))
+        bot.send_message(message.chat.id, f'Теперь пропусков {month} за месяц и {semester} за семестр',
+                         reply_to_message_id=message.id)
+    except (ValueError, IndexError):
+        bot.send_message(message.chat.id, 'wrong format')
+
+
 @bot.message_handler(commands=['new_month'])
 @admin_only
 def clear_skips(message):
     user_model.clear_skips()
     bot.send_message(message.chat.id, 'Пропуски за месяц обнулены')
-
-
-@bot.message_handler(content_types=['poll'])
-@admin_only
-def reply(message):
-    poll = message.poll
-    bot.send_poll(chat_id=config.AKIM_ID,
-                  question=poll.question,
-                  options=[option.text for option in poll.options],
-                  is_anonymous=poll.is_anonymous,
-                  allows_multiple_answers=poll.allows_multiple_answers
-                  )
 
 
 if __name__ == '__main__':

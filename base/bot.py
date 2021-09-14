@@ -14,7 +14,7 @@ class PollBot(TeleBot):
         return result
 
     def handle_poll_answer(self, poll_answer):
-        if poll_model.polls.get(poll_answer.poll_id) is not None:
+        if poll_answer.poll_id in poll_model.polls:
             poll, votes = poll_model.polls[poll_answer.poll_id]
             user = user_model.users[poll_answer.user.id]
             all_answers = [option.text for option in poll.options]

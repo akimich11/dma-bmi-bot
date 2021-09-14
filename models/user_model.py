@@ -21,7 +21,7 @@ class UserModel:
                 self.last_names[user.last_name] = user
 
     def get_skips(self, user_id):
-        if self.users.get(user_id) is None:
+        if user_id not in self.users:
             return 'чел тебя нет в списке', 'чел тебя нет в списке'
         return self.users[user_id].skips_month, self.users[user_id].skips_semester
 
@@ -29,6 +29,10 @@ class UserModel:
     def __set_skips(self, user, skips_month, skips_semester):
         self.cursor.execute("UPDATE users SET skips_month=(%s), "
                             "skips_semester=(%s) WHERE id=(%s)", (skips_month, skips_semester, user.id))
+
+    def set_skips(self, last_name, skips_month, skips_semester):
+        if last_name in self.last_names:
+            self.__set_skips(self.last_names[last_name], skips_month, skips_semester)
 
     def inc_skips(self, last_names):
         for last_name in last_names:
