@@ -1,13 +1,12 @@
 class User:
-    def __init__(self, user_id, username, first_name, last_name,
-                 department, is_admin, is_voenka, former_group, skips_month, skips_semester, *args):
-        self.username = None if username == 'undefined' else username
-        self.first_name = first_name
-        self.last_name = last_name
-        self.id = int(user_id)
-        self.department = department
-        self.is_admin = bool(is_admin)
-        self.is_voenka = bool(is_voenka)
-        self.former_group = former_group
-        self.skips_month = skips_month
-        self.skips_semester = skips_semester
+    def __init__(self, **kwargs):
+        self.username = None if kwargs['username'] == 'undefined' else kwargs['username']
+        self.first_name = kwargs['first_name']
+        self.last_name = kwargs['last_name']
+        self.id = int(kwargs['id'])
+        self.department = kwargs['department']
+        self.is_admin = bool(kwargs['is_admin'])
+        self.is_voenka = bool(kwargs['is_voenka'])
+        self.former_group = kwargs['former_group']
+        self.skips_month = kwargs['skips_month']
+        self.skips_semester = kwargs['skips_semester']

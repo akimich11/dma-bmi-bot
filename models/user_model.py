@@ -14,9 +14,10 @@ class UserModel:
     def __read_database(self):
         self.cursor.execute("""SELECT * FROM users ORDER BY department, last_name""")
         data = self.cursor.fetchall()
+        column_names = [column[0] for column in self.cursor.description]
         if data is not None:
             for row in data:
-                self.users[row[0]] = User(*row)
+                self.users[row[0]] = User(**dict(zip(column_names, row)))
             for user in self.users.values():
                 self.last_names[user.last_name] = user
 
@@ -47,16 +48,22 @@ class UserModel:
             user.skips_month = 0
 
     @connector
-    def make_admin(self, last_name):
-        self.cursor.execute("UPDATE users SET is_admin=1 WHERE last_name=(%s)", (last_name, ))
-        self.last_names[last_name].is_admin = True
-        return True
+    def make_admin(self, last_name: str):
+        last_name = last_name.capitalize()
+        self.cursor.execute("UPDATE users SET is_admin=1 WHERE last_name=(%s)", (last_name,))
+        if last_name in self.last_names:
+            self.last_names[last_name].is_admin = True
+            return True
+        return False
 
     @connector
-    def remove_admin(self, last_name):
-        self.cursor.execute("UPDATE users SET is_admin=0 WHERE last_name=(%s)", (last_name, ))
-        self.last_names[last_name].is_admin = True
-        return True
+    def remove_admin(self, last_name: str):
+        last_name = last_name.capitalize()
+        self.cursor.execute("UPDATE users SET is_admin=0 WHERE last_name=(%s)", (last_name,))
+        if last_name in self.last_names:
+            self.last_names[last_name].is_admin = True
+            return True
+        return False
 
 
 user_model = UserModel()

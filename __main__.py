@@ -20,8 +20,10 @@ def admin_only(func):
 def make_admin(message):
     try:
         command, last_name = message.text.split()
-        user_model.make_admin(last_name)
-        bot.send_message(message.chat.id, 'одним старостой больше')
+        if user_model.make_admin(last_name):
+            bot.send_message(message.chat.id, 'одним старостой больше')
+        else:
+            bot.send_message(message.chat.id, 'я такой фамилии не знаю')
     except ValueError:
         bot.send_message(message.chat.id, 'wrong format')
 
@@ -30,8 +32,10 @@ def make_admin(message):
 def remove_admin(message):
     try:
         command, last_name = message.text.split()
-        user_model.remove_admin(last_name)
-        bot.send_message(message.chat.id, 'одним старостой меньше')
+        if user_model.remove_admin(last_name):
+            bot.send_message(message.chat.id, 'одним старостой меньше')
+        else:
+            bot.send_message(message.chat.id, 'я такой фамилии не знаю')
     except ValueError:
         bot.send_message(message.chat.id, 'wrong format')
 
@@ -56,9 +60,12 @@ def send_stats(message):
         users = poll_model.get_ignorants_list(question)
     except ValueError:
         users = poll_model.get_ignorants_list()
-    bot.send_message(message.chat.id, f'Не проголосовали:\n' +
-                     '\n'.join([f'<a href="tg://user?id={user.id}">{user.first_name} {user.last_name}</a>'
-                                for user in users]), parse_mode='html')
+    if users:
+        bot.send_message(message.chat.id, f'Не проголосовали:\n' +
+                         '\n'.join([f'<a href="tg://user?id={user.id}">{user.first_name} {user.last_name}</a>'
+                                    for user in users]), parse_mode='html')
+    else:
+        bot.send_message(message.chat.id, 'Все проголосовали. Горжусь вами!')
 
 
 @bot.message_handler(commands=['skips'])
@@ -71,6 +78,15 @@ def send_skips(message):
         bot.send_message(message.chat.id, f'Часов за месяц: {month}\n'
                                           f'Часов за семестр: {semester}\n'
                                           f'Совет: ходи на пары чаще', reply_to_message_id=message.id)
+
+
+@bot.message_handler(commands=['skips_all'])
+def send_skips_all(message):
+    data = []
+    for user in user_model.users.values():
+        month, semester = user_model.get_skips(user.id)
+        data.append(f'{month: 2} {semester: 2}  {user.first_name} {user.last_name}')
+    bot.send_message(message.chat.id, 'Таблица пропусков\n\n' + '\n'.join(data))
 
 
 @bot.message_handler(commands=['inc_skips'])

@@ -34,6 +34,15 @@ class PollModel:
         self.cursor.execute("""UPDATE polls SET poll=(%s) WHERE id=(%s)""",
                             (pickle.dumps((poll, votes)), poll.id))
 
+    @connector
+    def __remove_poll(self, poll_id):
+        self.cursor.execute("""DELETE FROM polls WHERE id=(%s)""", (poll_id, ))
+        del self.polls[poll_id]
+        if not self.polls:
+            self.last_poll_id = None
+        for poll in self.polls:
+            self.last_poll_id = poll.id
+
     def get_ignorants_list(self, poll_question=None):
         ignorants = []
         if poll_question is not None:
@@ -44,12 +53,16 @@ class PollModel:
             else:
                 return None
         else:
-            poll, votes = self.polls[self.last_poll_id]
+            if self.last_poll_id is not None:
+                poll, votes = self.polls[self.last_poll_id]
+            else:
+                return None
 
         for user in user_model.users.values():
             if user.id not in votes:
                 ignorants.append(user)
-
+        if not ignorants:
+            self.__remove_poll(poll.id)
         return ignorants
 
 
