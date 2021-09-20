@@ -2,21 +2,11 @@ import config
 from base.bot import bot
 from models.poll_model import poll_model
 from models.user_model import user_model
-import functools
-
-
-def admin_only(func):
-    @functools.wraps(func)
-    def wrapped(message, *args, **kwargs):
-        user = user_model.users.get(message.from_user.id)
-        if user is not None and user.is_admin:
-            return func(message, *args, **kwargs)
-        else:
-            bot.send_message(message.chat.id, 'Команда доступна только старостам')
-    return wrapped
+from decorators.common import exception_handler, admin_only
 
 
 @bot.message_handler(commands=['make_admin'])
+@exception_handler
 def make_admin(message):
     try:
         command, last_name = message.text.split()
@@ -29,6 +19,7 @@ def make_admin(message):
 
 
 @bot.message_handler(commands=['remove_admin'])
+@exception_handler
 def remove_admin(message):
     try:
         command, last_name = message.text.split()
@@ -41,6 +32,7 @@ def remove_admin(message):
 
 
 @bot.message_handler(content_types=['poll'])
+@exception_handler
 @admin_only
 def reply(message):
     poll = message.poll
@@ -53,6 +45,7 @@ def reply(message):
 
 
 @bot.message_handler(commands=['tag'])
+@exception_handler
 @admin_only
 def send_stats(message):
     try:
@@ -69,6 +62,7 @@ def send_stats(message):
 
 
 @bot.message_handler(commands=['skips'])
+@exception_handler
 def send_skips(message):
     month, semester = user_model.get_skips(message.from_user.id)
     if isinstance(month, int) and month < 6:
@@ -81,6 +75,7 @@ def send_skips(message):
 
 
 @bot.message_handler(commands=['skips_all'])
+@exception_handler
 def send_skips_all(message):
     data = []
     for user in user_model.users.values():
@@ -90,6 +85,7 @@ def send_skips_all(message):
 
 
 @bot.message_handler(commands=['inc_skips'])
+@exception_handler
 @admin_only
 def inc_skips(message):
     try:
@@ -101,6 +97,7 @@ def inc_skips(message):
 
 
 @bot.message_handler(commands=['set_skips'])
+@exception_handler
 @admin_only
 def set_skips(message):
     try:
@@ -113,6 +110,7 @@ def set_skips(message):
 
 
 @bot.message_handler(commands=['new_month'])
+@exception_handler
 @admin_only
 def clear_skips(message):
     user_model.clear_skips()

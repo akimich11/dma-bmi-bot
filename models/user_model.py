@@ -1,5 +1,5 @@
 from base.user import User
-from base.decorators import connector
+from decorators.db import connector
 
 
 class UserModel:

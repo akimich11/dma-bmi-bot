@@ -2,7 +2,7 @@ import pickle
 
 from telebot.types import Poll
 
-from base.decorators import connector
+from decorators.db import connector
 from models.user_model import user_model
 
 
@@ -40,8 +40,8 @@ class PollModel:
         del self.polls[poll_id]
         if not self.polls:
             self.last_poll_id = None
-        for poll in self.polls:
-            self.last_poll_id = poll.id
+        for poll_id in self.polls:
+            self.last_poll_id = poll_id
 
     def get_ignorants_list(self, poll_question=None):
         ignorants = []

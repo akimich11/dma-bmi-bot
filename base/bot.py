@@ -4,17 +4,17 @@ from models.user_model import user_model
 from models.poll_model import poll_model
 
 
-class PollBot(TeleBot):
+class MdaBot(TeleBot):
     def __init__(self, token):
         super().__init__(token)
 
     def send_poll(self, *args, **kwargs) -> types.Message:
-        result = super(PollBot, self).send_poll(*args, **kwargs)
+        result = super(MdaBot, self).send_poll(*args, **kwargs)
         poll_model.add_poll(result.poll)
         return result
 
     def handle_poll_answer(self, poll_answer):
-        if poll_answer.poll_id in poll_model.polls:
+        if poll_answer.poll_id in poll_model.polls and poll_answer.user.id in user_model.users:
             poll, votes = poll_model.polls[poll_answer.poll_id]
             user = user_model.users[poll_answer.user.id]
             all_answers = [option.text for option in poll.options]
@@ -31,5 +31,5 @@ class PollBot(TeleBot):
             poll_model.update_poll(poll, votes)
 
 
-bot = PollBot(token=config.TOKEN)
+bot = MdaBot(token=config.TOKEN)
 bot.register_poll_answer_handler(bot.handle_poll_answer, None)
