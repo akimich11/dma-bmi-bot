@@ -36,7 +36,7 @@ def remove_admin(message):
 @admin_only
 def reply(message):
     poll = message.poll
-    bot.send_poll(chat_id=config.AKIM_ID,
+    bot.send_poll(chat_id=config.MDA_ID,
                   question=poll.question,
                   options=[option.text for option in poll.options],
                   is_anonymous=poll.is_anonymous,
