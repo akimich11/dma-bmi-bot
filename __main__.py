@@ -36,7 +36,7 @@ def remove_admin(message):
 @admin_only
 def reply(message):
     poll = message.poll
-    bot.send_poll(chat_id=config.AKIM_ID,
+    bot.send_poll(chat_id=config.MDA_ID,
                   question=poll.question,
                   options=[option.text for option in poll.options],
                   is_anonymous=poll.is_anonymous,
@@ -48,11 +48,17 @@ def reply(message):
 @exception_handler
 @admin_only
 def send_stats(message):
-    try:
-        command, question = message.text.split(maxsplit=1)
-        users = poll_model.get_ignorants_list(question)
-    except ValueError:
-        users = poll_model.get_ignorants_list()
+    department, question = None, None
+    args = message.text.split(maxsplit=2)
+    if len(args) == 3:
+        command, department, question = args
+    elif len(args) == 2:
+        if args[1].lower() != 'дма' and args[1].lower() != 'бми':
+            command, question = args
+        else:
+            command, department = args
+    users = poll_model.get_ignorants_list(department, question)
+
     if users:
         bot.send_message(message.chat.id, f'Не проголосовали:\n' +
                          '\n'.join([f'<a href="tg://user?id={user.id}">{user.first_name} {user.last_name}</a>'

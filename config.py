@@ -10,3 +10,4 @@ HOSTNAME = url.hostname
 DATABASE_NAME = os.environ['DATABASE_NAME']
 
 AKIM_ID = int(os.environ['AKIM_ID'])
+MDA_ID = int(os.environ['MDA_ID'])

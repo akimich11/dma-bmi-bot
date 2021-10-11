@@ -5,5 +5,6 @@ class User:
         self.last_name = kwargs['last_name']
         self.id = int(kwargs['id'])
         self.is_admin = bool(kwargs['is_admin'])
+        self.department = kwargs['department'].lower()
         self.skips_month = kwargs['skips_month']
         self.skips_semester = kwargs['skips_semester']
