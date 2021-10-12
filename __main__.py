@@ -64,7 +64,7 @@ def send_poll_stats(message, department=None, question=None):
 def tag(message):
     try:
         command, question = message.text.split(maxsplit=1)
-        send_poll_stats(message, question)
+        send_poll_stats(message, question=question)
     except ValueError:
         send_poll_stats(message)
 
