@@ -1,6 +1,12 @@
+from datetime import datetime
+import time
+from threading import Thread
+
 import config
+import schedule
 from base.bot import bot
 from models.poll_model import poll_model
+from models.question_model import QuestionModel
 from models.user_model import user_model
 from decorators.common import exception_handler, admin_only
 
@@ -148,15 +154,36 @@ def set_skips(message):
         bot.send_message(message.chat.id, 'wrong format')
 
 
-@bot.message_handler(commands=['new_month'])
 @exception_handler
-@admin_only
-def clear_skips(message):
+def clear_skips():
     user_model.clear_skips()
-    bot.send_message(message.chat.id, 'Пропуски за месяц обнулены')
+    bot.send_message(config.MDA_ID, 'Пропуски за месяц обнулены')
+
+
+@exception_handler
+def schedule_check():
+    while True:
+        schedule.run_pending()
+        time.sleep(30)
+
+
+@exception_handler
+def send_periodic_question(question):
+    bot.send_poll(chat_id=config.MDA_ID,
+                  question=f'{question.question} {datetime.utcnow().day}.{datetime.utcnow().month}',
+                  options=question.options,
+                  is_anonymous=False,
+                  allows_multiple_answers=question.is_multi
+                  )
 
 
 if __name__ == '__main__':
+    for q in QuestionModel().questions:
+        getattr(schedule.every(), q.weekday
+                ).at(q.time).do(send_periodic_question, question=q)
+    # schedule.every(31).days.at('07:00').do(clear_skips)
+
+    Thread(target=schedule_check).start()
     bot.send_message(config.AKIM_ID, 'started')
 
 bot.polling(none_stop=True)
