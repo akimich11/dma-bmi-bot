@@ -118,10 +118,8 @@ def send_skips_all(message):
     data = []
     for user in user_model.users.values():
         month, semester = user_model.get_skips(user.id)
-        data.append(
-            f'{month: 2} {semester: 2}  {user.first_name} {user.last_name}')
-    bot.send_message(message.chat.id,
-                     'Таблица пропусков\n\n' + '\n'.join(data))
+        data.append(f'{month: 2d} {semester: 3d}  {user.first_name} {user.last_name}')
+    bot.send_message(message.chat.id, 'Таблица пропусков\n\n<pre>' + '\n'.join(data) + '</pre>', parse_mode='html')
 
 
 @bot.message_handler(commands=['inc_skips'])
