@@ -2,8 +2,8 @@ import pickle
 
 from telebot.types import Poll
 
-from decorators.db import connector
-from models.user_model import user_model
+from base.decorators.db import connector
+from users.models import user_model
 
 
 class PollModel:
