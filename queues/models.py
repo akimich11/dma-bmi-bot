@@ -11,10 +11,10 @@ class Queue:
 
     def __str__(self):
         if self.queue:
-            return f'Дата: {self.date}, предмет: {self.subject}. Очередь:\n' +\
-                   '\n'.join([f'{user_model.users[user_id].first_name} '
-                              f'{user_model.users[user_id].last_name}' for user_id in self.queue])
-        return f'Дата: {self.date}, предмет: {self.subject}. Очередь пока пустая, давай занимай пока не поздно'
+            return f'{self.date}, {self.subject}\nОчередь:\n' +\
+                   '\n'.join([f'{i + 1}. {user_model.users[user_id].first_name} '
+                              f'{user_model.users[user_id].last_name}' for i, user_id in enumerate(self.queue)])
+        return f'{self.date}, {self.subject}. Очередь пока пустая, занимай пока не поздно'
 
 
 class QueueModel:
