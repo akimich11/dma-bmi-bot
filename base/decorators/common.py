@@ -3,7 +3,7 @@ import traceback
 
 import config
 from base.bot import bot
-from models.user_model import user_model
+from users.models import user_model
 
 
 def admin_only(func):

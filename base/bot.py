@@ -1,7 +1,7 @@
 from telebot import TeleBot, types
 import config
-from models.user_model import user_model
-from models.poll_model import poll_model
+from users.models import user_model
+from polls.models import poll_model
 
 
 class MdaBot(TeleBot):

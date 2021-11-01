@@ -1,4 +1,4 @@
-from decorators.db import connector
+from base.decorators.db import connector
 
 
 class Question:
