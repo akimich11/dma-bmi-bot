@@ -11,10 +11,11 @@ def sign_up(message):
         command, date, subject = message.text.split(maxsplit=2)
         user_id = message.from_user.id
         if queue_model.sign_up(date, subject, user_id):
-            bot.send_message(user_id, f'{user_model.users[user_id].first_name} '
-                                      f'{user_model.users[user_id].last_name} теперь в очереди {date} на {subject}')
+            bot.send_message(message.chat.id, f'{user_model.users[user_id].first_name} '
+                                              f'{user_model.users[user_id].last_name} теперь в очереди '
+                                              f'{date} на {subject}')
         else:
-            bot.send_message(user_id, 'Очередь для заданных предмета и даты не найдена :(')
+            bot.send_message(message.chat.id, 'Очередь для заданных предмета и даты не найдена :(')
     except ValueError:
         bot.send_message(message.chat.id, 'wrong format')
 
