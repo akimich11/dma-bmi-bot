@@ -63,3 +63,9 @@ def set_skips(message):
 def clear_skips():
     user_model.clear_skips()
     bot.send_message(config.MDA_ID, 'Пропуски за месяц обнулены')
+
+
+@bot.message_handler(commands=['new_month'])
+@admin_only
+def clear(message):
+    clear_skips()

@@ -7,16 +7,22 @@ import schedule
 from base.bot import bot
 from base.decorators.common import exception_handler
 from schedules.models import QuestionModel
-import polls.views
 import skips.views
+import polls.views
 import users.views
 import queues.views
 
 
 @exception_handler
 def schedule_check():
+    cleared = False
     while True:
         schedule.run_pending()
+        if datetime.utcnow().day == 1 and not cleared:
+            skips.views.clear_skips()
+            cleared = True
+        if datetime.utcnow().day == 2:
+            cleared = False
         time.sleep(30)
 
 
