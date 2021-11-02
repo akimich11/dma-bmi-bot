@@ -34,20 +34,23 @@ class PollModel:
         self.cursor.execute("""UPDATE polls SET poll=(%s) WHERE id=(%s)""",
                             (pickle.dumps((poll, votes)), poll.id))
 
-    def get_ignorants_list(self, department=None, poll_question=None):
-        ignorants = []
+    def __get_poll(self, poll_question):
         if poll_question is not None:
             for p, v in self.polls.values():
                 if poll_question.lower() in p.question.lower():
-                    poll, votes = p, v
-                    break
+                    return p, v
             else:
-                return None
+                return None, None
         else:
             if self.last_poll_id is not None:
-                poll, votes = self.polls[self.last_poll_id]
-            else:
-                return None
+                return self.polls[self.last_poll_id]
+            return None, None
+
+    def get_ignorants_list(self, department=None, poll_question=None):
+        ignorants = []
+        poll, votes = self.__get_poll(poll_question)
+        if poll is None:
+            return None
 
         for user in user_model.users.values():
             if user.id not in votes and (
@@ -55,6 +58,21 @@ class PollModel:
                 ignorants.append(user)
 
         return ignorants
+
+    def get_vote_list(self, poll_question=None):
+        students, workers, ignorants = [], [], []
+        poll, votes = self.__get_poll(poll_question)
+        if poll is None:
+            return None, None, None
+
+        for user in user_model.users.values():
+            if user.id not in votes:
+                ignorants.append(user)
+            elif 'да' in votes[user.id]:
+                students.append(user.id)
+            else:
+                workers.append(user.id)
+        return students, workers, ignorants
 
 
 poll_model = PollModel()

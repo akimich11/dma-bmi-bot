@@ -17,7 +17,7 @@ def reply(message):
                   )
 
 
-def send_poll_stats(message, department=None, question=None):
+def send_ignorants_list(message, department=None, question=None):
     users = poll_model.get_ignorants_list(department, question)
     if users is None:
         bot.send_message(message.chat.id, 'Опрос не найден')
@@ -37,9 +37,9 @@ def send_poll_stats(message, department=None, question=None):
 def tag(message):
     try:
         command, question = message.text.split(maxsplit=1)
-        send_poll_stats(message, question=question)
+        send_ignorants_list(message, question=question)
     except ValueError:
-        send_poll_stats(message)
+        send_ignorants_list(message)
 
 
 @bot.message_handler(commands=['tag_dma'])
@@ -48,9 +48,9 @@ def tag(message):
 def tag_dma(message):
     try:
         command, question = message.text.split(maxsplit=1)
-        send_poll_stats(message, 'ДМА', question)
+        send_ignorants_list(message, 'ДМА', question)
     except ValueError:
-        send_poll_stats(message, 'ДМА')
+        send_ignorants_list(message, 'ДМА')
 
 
 @bot.message_handler(commands=['tag_bmi'])
@@ -59,6 +59,31 @@ def tag_dma(message):
 def tag_dma(message):
     try:
         command, question = message.text.split(maxsplit=1)
-        send_poll_stats(message, 'БМИ', question)
+        send_ignorants_list(message, 'БМИ', question)
     except ValueError:
-        send_poll_stats(message, 'БМИ')
+        send_ignorants_list(message, 'БМИ')
+
+
+def send_vote_list(message, question=None):
+    students, workers, ignorants = poll_model.get_vote_list(question)
+    if students is None:
+        bot.send_message(message.chat.id, 'Опрос не найден')
+        return
+    students = [f'{user.first_name} {user.last_name}' for user in sorted(students, key=lambda x: x.last_name)]
+    workers = [f'{user.first_name} {user.last_name}' for user in sorted(workers, key=lambda x: x.last_name)]
+    ignorants = [f'{user.first_name} {user.last_name}' for user in sorted(ignorants, key=lambda x: x.last_name)]
+
+    bot.send_message(message.chat.id, 'Будут:\n<pre>' + '\n'.join(students) + '</pre>' +
+                                      'Не будут:\n<pre>' + '\n'.join(workers) + '</pre>' +
+                                      'Непонятно:\n<pre>' + '\n'.join(ignorants) + '</pre>', parse_mode='html')
+
+
+@bot.message_handler(commands=['stats'])
+@exception_handler
+@admin_only
+def poll_stats(message):
+    try:
+        command, question = message.text.split(maxsplit=1)
+        send_vote_list(message, question=question)
+    except ValueError:
+        send_vote_list(message)
