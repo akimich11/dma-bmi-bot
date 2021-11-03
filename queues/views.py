@@ -11,6 +11,7 @@ def sign_up(message):
         args = message.text.split(maxsplit=3)
         if len(args) == 4:
             command, date, subject, pos = args
+            pos = int(pos)
         elif len(args) == 3:
             command, date, subject, pos = *args, None
         else:

@@ -16,7 +16,7 @@ class Queue:
         self.id_to_pos = {}
 
     def __str__(self):
-        if self.queue:
+        if self.id_to_pos:
             return f'{self.date}, {self.subject}\nОчередь:\n' +\
                    '\n'.join([f'{i + 1}. {user_model.users[user_id].first_name} '
                               f'{user_model.users[user_id].last_name}'
