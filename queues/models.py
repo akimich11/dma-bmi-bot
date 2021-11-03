@@ -26,20 +26,20 @@ class Queue:
         
     def add_to_pos(self, user_id, pos):
         if pos is None:
-            pos = max(self.id_to_pos.values()) + 1
+            pos = 1 if not self.id_to_pos else max(self.id_to_pos.values()) + 1
             if pos > MAX_QUEUE_SIZE:
                 return 'Похоже, кто-то уже занял самое последнее место.'
         if pos <= 0 or pos > MAX_QUEUE_SIZE:
             return 'не-не-не'
-        if self.queue[pos] == self.EMPTY:
-            self.queue[pos] = user_id
+        if self.queue[pos - 1] == self.EMPTY:
+            self.queue[pos - 1] = user_id
             self.id_to_pos[user_id] = pos
             return None
         else:
             return 'Это место уже занято.'
             
     def remove(self, user_id):
-        self.queue[self.id_to_pos[user_id]] = self.EMPTY
+        self.queue[self.id_to_pos[user_id] - 1] = self.EMPTY
         self.id_to_pos.pop(user_id)
     
 
