@@ -23,9 +23,10 @@ def sign_up(message):
         elif command == '/move':
             ret = queue_model.move(date, subject, user_id, pos)
         if ret is None:
+            resulting_pos = queue_model.queues[(date, subject)].id_to_pos[user_id]
             bot.send_message(message.chat.id, f'{user_model.users[user_id].first_name} '
                                               f'{user_model.users[user_id].last_name} теперь в очереди '
-                                              f'{date} на {subject}')
+                                              f'{date} на {subject} на позиции {resulting_pos}')
         else:
             bot.send_message(message.chat.id, ret)
     except ValueError:

@@ -34,7 +34,7 @@ class Queue:
         if pos is None:
             pos = 1 if not self.id_to_pos else max(self.id_to_pos.values()) + 1
             if pos > MAX_QUEUE_SIZE:
-                return 'Похоже, кто-то уже занял самое последнее место.'
+                return 'Похоже, кто-то уже занял самое последнее место'
         if pos <= 0 or pos > MAX_QUEUE_SIZE:
             return 'не-не-не'
         if self.queue[pos - 1] == self.EMPTY:
@@ -42,7 +42,7 @@ class Queue:
             self.id_to_pos[user_id] = pos
             return None
         else:
-            return 'Это место уже занято.'
+            return 'Это место уже занято'
             
     def remove(self, user_id):
         self.queue[self.id_to_pos[user_id] - 1] = self.EMPTY
@@ -87,7 +87,7 @@ class QueueModel:
             if ret is None:
                 self.update_queue(queue_object)
             return ret
-        return 'Ты уже есть в очереди.'
+        return 'Ты уже есть в очереди'
         
     def cancel_sign_up(self, date, subject, user_id):
         if (date, subject) not in queue_model.queues:
@@ -97,7 +97,7 @@ class QueueModel:
             queue_object.remove(user_id)
             self.update_queue(queue_object)
             return None
-        return 'Тебя и так нет в этой очереди.'
+        return 'Тебя и так нет в этой очереди'
         
     def move(self, date, subject, user_id, new_pos):
         if (date, subject) not in queue_model.queues:
@@ -110,7 +110,7 @@ class QueueModel:
                 queue_object.queue[old_pos - 1] = queue_object.EMPTY
                 self.update_queue(queue_object)
             return ret
-        return 'Тебя нет в этой очереди. Используй /sign_up.'
+        return 'Тебя нет в этой очереди. Используй /sign_up'
 
     def clear_queue(self, date, subject):
         if (date, subject) in self.queues:
