@@ -12,8 +12,14 @@ class Queue:
     def __init__(self, subject, date, queue=None):
         self.subject = subject
         self.date = date
-        self.queue = queue or [self.EMPTY] * MAX_QUEUE_SIZE
-        self.id_to_pos = {}
+        if queue is None:
+            self.queue = [self.EMPTY] * MAX_QUEUE_SIZE
+            self.id_to_pos = {}
+        else:
+            self.queue = queue
+            self.id_to_pos = {user_id: i + 1
+                              for i, user_id in enumerate(queue)
+                              if user_id != self.EMPTY}
 
     def __str__(self):
         if self.id_to_pos:
@@ -94,10 +100,17 @@ class QueueModel:
         return 'Тебя и так нет в этой очереди.'
         
     def move(self, date, subject, user_id, new_pos):
-        ret = self.cancel_sign_up(date, subject, user_id)
-        if ret is not None:
+        if (date, subject) not in queue_model.queues:
+            return 'Очередь для заданных предмета и даты не найдена :('
+        queue_object = self.queues[(date, subject)]
+        if user_id in user_model.users and user_id in queue_object.id_to_pos:
+            old_pos = queue_object.id_to_pos.user_id
+            ret = queue_object.add_to_pos(user_id, pos)
+            if ret is None:
+                queue_object.queue[old_pos - 1] = queue_object.EMPTY
+                self.update_queue(queue_object)
             return ret
-        return self.sign_up(date, subject, user_id, new_pos)
+        return 'Тебя нет в этой очереди. Используй /sign_up.'
 
     def clear_queue(self, date, subject):
         if (date, subject) in self.queues:
