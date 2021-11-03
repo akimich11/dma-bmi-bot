@@ -32,7 +32,7 @@ def sign_up(message):
         bot.send_message(message.chat.id, 'wrong format')
         
         
-@bot.message_handler(commands=['cancel_sign_up'])
+@bot.message_handler(commands=['cancel'])
 @exception_handler
 def cancel_sign_up(message):
     try:
