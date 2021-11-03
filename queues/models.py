@@ -104,8 +104,8 @@ class QueueModel:
             return 'Очередь для заданных предмета и даты не найдена :('
         queue_object = self.queues[(date, subject)]
         if user_id in user_model.users and user_id in queue_object.id_to_pos:
-            old_pos = queue_object.id_to_pos.user_id
-            ret = queue_object.add_to_pos(user_id, pos)
+            old_pos = queue_object.id_to_pos[user_id]
+            ret = queue_object.add_to_pos(user_id, new_pos)
             if ret is None:
                 queue_object.queue[old_pos - 1] = queue_object.EMPTY
                 self.update_queue(queue_object)
