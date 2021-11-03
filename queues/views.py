@@ -17,9 +17,9 @@ def sign_up(message):
             raise ValueError()
             
         user_id = message.from_user.id
-        if command == 'sign_up':
+        if command == '/sign_up':
             ret = queue_model.sign_up(date, subject, user_id, pos)
-        elif command == 'move':
+        elif command == '/move':
             ret = queue_model.move(date, subject, user_id, pos)
         if ret is None:
             bot.send_message(message.chat.id, f'{user_model.users[user_id].first_name} '
