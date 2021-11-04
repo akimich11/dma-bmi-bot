@@ -3,29 +3,15 @@ from base.decorators.common import exception_handler, admin_only
 from users.models import user_model
 
 
-@bot.message_handler(commands=['make_admin'])
+@bot.message_handler(commands=['make_admin', 'remove_admin'])
 @exception_handler
 @admin_only
-def make_admin(message):
+def set_admin(message):
     try:
         command, last_name = message.text.split()
-        if user_model.make_admin(last_name):
-            bot.send_message(message.chat.id, 'одним старостой больше')
-        else:
+        is_make_admin = (command == '/make_admin')
+        if not user_model.set_admin(last_name, is_make_admin):
             bot.send_message(message.chat.id, 'я такой фамилии не знаю')
-    except ValueError:
-        bot.send_message(message.chat.id, 'wrong format')
-
-
-@bot.message_handler(commands=['remove_admin'])
-@exception_handler
-@admin_only
-def remove_admin(message):
-    try:
-        command, last_name = message.text.split()
-        if user_model.remove_admin(last_name):
-            bot.send_message(message.chat.id, 'одним старостой меньше')
-        else:
-            bot.send_message(message.chat.id, 'я такой фамилии не знаю')
+        bot.send_message(message.chat.id, f'одним старостой {"больше" if is_make_admin else "меньше"}')
     except ValueError:
         bot.send_message(message.chat.id, 'wrong format')

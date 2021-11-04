@@ -59,20 +59,11 @@ class UserModel:
             user.skips_month = 0
 
     @connector
-    def make_admin(self, last_name: str):
+    def set_admin(self, last_name, make_admin=True):
         last_name = last_name.capitalize()
-        self.cursor.execute("UPDATE users SET is_admin=1 WHERE last_name=(%s)", (last_name,))
+        self.cursor.execute("UPDATE users SET is_admin=(%s) WHERE last_name=(%s)", (int(make_admin), last_name))
         if last_name in self.last_names:
-            self.last_names[last_name].is_admin = True
-            return True
-        return False
-
-    @connector
-    def remove_admin(self, last_name: str):
-        last_name = last_name.capitalize()
-        self.cursor.execute("UPDATE users SET is_admin=0 WHERE last_name=(%s)", (last_name,))
-        if last_name in self.last_names:
-            self.last_names[last_name].is_admin = False
+            self.last_names[last_name].is_admin = make_admin
             return True
         return False
 
