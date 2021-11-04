@@ -65,17 +65,17 @@ def tag_dma(message):
 
 
 def send_vote_list(message, question=None):
-    students, workers, ignorants = poll_model.get_vote_list(question)
+    students, skippers = poll_model.get_vote_list(question)
     if students is None:
         bot.send_message(message.chat.id, 'Опрос не найден')
         return
-    students = [f'{user.first_name} {user.last_name}' for user in sorted(students, key=lambda x: x.last_name)]
-    workers = [f'{user.first_name} {user.last_name}' for user in sorted(workers, key=lambda x: x.last_name)]
-    ignorants = [f'{user.first_name} {user.last_name}' for user in sorted(ignorants, key=lambda x: x.last_name)]
+    students = [f'{user.last_name} {user.first_name} {f"({p:5.2f}%)" if isinstance(p, float) else ""}'
+                for (user, p) in sorted(students, key=lambda x: (x[0].department[::-1], x[0].last_name))]
+    skippers = [f'{user.last_name} {user.first_name} {f"({p:5.2f}%)" if isinstance(p, float) else ""}'
+                for (user, p) in sorted(skippers, key=lambda x: (x[0].department[::-1], x[0].last_name))]
 
     bot.send_message(message.chat.id, 'Будут:\n<pre>' + '\n'.join(students) + '</pre>' +
-                                      'Не будут:\n<pre>' + '\n'.join(workers) + '</pre>' +
-                                      'Непонятно:\n<pre>' + '\n'.join(ignorants) + '</pre>', parse_mode='html')
+                                      'Не будут:\n<pre>' + '\n'.join(skippers) + '</pre>', parse_mode='html')
 
 
 @bot.message_handler(commands=['stats'])
@@ -87,3 +87,8 @@ def poll_stats(message):
         send_vote_list(message, question=question)
     except ValueError:
         send_vote_list(message)
+
+
+@bot.message_handler(commands=['polls'])
+def tester(message):
+    bot.send_message(message.chat.id, '\n'.join(f'{poll.question}' for poll in poll_model.polls.values()))
