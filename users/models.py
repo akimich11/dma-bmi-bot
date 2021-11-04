@@ -72,7 +72,7 @@ class UserModel:
         last_name = last_name.capitalize()
         self.cursor.execute("UPDATE users SET is_admin=0 WHERE last_name=(%s)", (last_name,))
         if last_name in self.last_names:
-            self.last_names[last_name].is_admin = True
+            self.last_names[last_name].is_admin = False
             return True
         return False
 

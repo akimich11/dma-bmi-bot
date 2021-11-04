@@ -1,10 +1,11 @@
 from base.bot import bot
-from base.decorators.common import exception_handler
+from base.decorators.common import exception_handler, admin_only
 from users.models import user_model
 
 
 @bot.message_handler(commands=['make_admin'])
 @exception_handler
+@admin_only
 def make_admin(message):
     try:
         command, last_name = message.text.split()
@@ -18,6 +19,7 @@ def make_admin(message):
 
 @bot.message_handler(commands=['remove_admin'])
 @exception_handler
+@admin_only
 def remove_admin(message):
     try:
         command, last_name = message.text.split()
