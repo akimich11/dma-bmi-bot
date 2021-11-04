@@ -2,19 +2,39 @@ import pickle
 from base.decorators.db import connector
 from users.models import user_model
 
+MAX_QUEUE_SIZE = 30
+
 
 class Queue:
-    def __init__(self, subject, date, queue=None):
+    EMPTY = ''
+
+    def __init__(self, subject, positions=None):
         self.subject = subject
-        self.date = date
-        self.queue = queue or []
+        self.positions = positions or {}
 
     def __str__(self):
-        if self.queue:
-            return f'{self.date}, {self.subject}\nОчередь:\n' +\
-                   '\n'.join([f'{i + 1}. {user_model.users[user_id].first_name} '
-                              f'{user_model.users[user_id].last_name}' for i, user_id in enumerate(self.queue)])
-        return f'{self.date}, {self.subject}. Очередь пока пустая, занимай пока не поздно'
+        if self.positions:
+            return f'{self.subject}\nОчередь:\n' + \
+                   '\n'.join([f'{i}. {user_model.users[user_id].first_name} '
+                              f'{user_model.users[user_id].last_name}'
+                              for user_id, i in sorted(list(self.positions.items()),
+                                                       key=lambda x: x[1])])
+        return f'{self.subject}. Очередь пока пустая, занимай пока не поздно'
+
+    def add_to_pos(self, user_id, pos):
+        if pos is None:
+            pos = 1 if not self.positions else max(self.positions.values()) + 1
+            if pos > MAX_QUEUE_SIZE:
+                return 'Похоже, кто-то уже занял самое последнее место'
+        if pos <= 0 or pos > MAX_QUEUE_SIZE:
+            return 'не-не-не'
+        if pos not in self.positions.values():
+            self.positions[user_id] = pos
+            return None
+        return 'Это место уже занято'
+
+    def remove(self, user_id):
+        self.positions.pop(user_id)
 
 
 class QueueModel:
@@ -30,35 +50,57 @@ class QueueModel:
         data = self.cursor.fetchall()
         if data:
             for queue in data:
-                self.queues[(queue[2], queue[1])] = Queue(*queue[1:3], pickle.loads(queue[3]))
+                self.queues[queue[1]] = Queue(subject=queue[1],
+                                              positions=pickle.loads(queue[2]))
 
     @connector
     def add_queue(self, queue: Queue):
-        self.cursor.execute("""INSERT INTO queues VALUE (%s, %s, %s, %s)""", (None,
-                                                                              queue.subject,
-                                                                              queue.date,
-                                                                              pickle.dumps(queue.queue)))
-        self.queues[(queue.date, queue.subject)] = queue
+        self.cursor.execute("""INSERT INTO queues VALUE (%s, %s, %s)""", (None,
+                                                                          queue.subject,
+                                                                          pickle.dumps(queue.positions)))
+        self.queues[queue.subject] = queue
 
     @connector
     def update_queue(self, queue: Queue):
-        self.cursor.execute("""UPDATE queues SET queue=(%s) WHERE subject=(%s) and date=(%s)""",
-                            (pickle.dumps(queue.queue), queue.subject, queue.date))
+        self.cursor.execute("""UPDATE queues SET positions=(%s) WHERE subject=(%s)""",
+                            (pickle.dumps(queue.positions), queue.subject))
 
-    def sign_up(self, date, subject, user_id):
-        if (date, subject) not in queue_model.queues:
-            return False
-        queue_object = self.queues[(date, subject)]
-        if user_id in user_model.users and user_id not in queue_object.queue:
-            queue_object.queue.append(user_id)
+    def sign_up(self, subject, user_id, pos=None):
+        if subject not in queue_model.queues:
+            return 'Очередь для заданного предмета не найдена :('
+        queue_object = self.queues[subject]
+        if user_id in user_model.users and user_id not in queue_object.positions:
+            result = queue_object.add_to_pos(user_id, pos)
+            if result is None:
+                self.update_queue(queue_object)
+            return result
+        return 'Ты уже есть в очереди'
+
+    def cancel_sign_up(self, subject, user_id):
+        if subject not in queue_model.queues:
+            return 'Очередь для заданного предмета не найдена :('
+        queue_object = self.queues[subject]
+        if user_id in user_model.users and user_id in queue_object.positions:
+            queue_object.remove(user_id)
             self.update_queue(queue_object)
-            return True
-        return False
+            return None
+        return 'Тебя и так нет в этой очереди'
 
-    def clear_queue(self, date, subject):
-        if (date, subject) in self.queues:
-            self.queues[(date, subject)].queue = []
-            self.update_queue(self.queues[(date, subject)])
+    def move(self, subject, user_id, new_pos):
+        if subject not in queue_model.queues:
+            return 'Очередь для заданного предмета не найдена :('
+        queue_object = self.queues[subject]
+        if user_id in user_model.users and user_id in queue_object.positions:
+            result = queue_object.add_to_pos(user_id, new_pos)
+            if result is None:
+                self.update_queue(queue_object)
+            return result
+        return 'Тебя нет в этой очереди. Используй /sign_up'
+
+    def clear_queue(self, subject):
+        if subject in self.queues:
+            self.queues[subject].positions.clear()
+            self.update_queue(self.queues[subject])
             return True
         return False
 
