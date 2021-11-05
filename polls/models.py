@@ -3,6 +3,7 @@ import pickle
 from telebot.types import Poll
 
 from base.decorators.db import connector
+from polls import utils
 from users.models import user_model
 
 
@@ -34,21 +35,9 @@ class PollModel:
         self.cursor.execute("""UPDATE polls SET poll=(%s) WHERE id=(%s)""",
                             (pickle.dumps((poll, votes)), poll.id))
 
-    def __get_poll(self, poll_question):
-        if poll_question is not None:
-            for p, v in self.polls.values():
-                if poll_question.lower() in p.question.lower():
-                    return p, v
-            else:
-                return None, None
-        else:
-            if self.last_poll_id is not None:
-                return self.polls[self.last_poll_id]
-            return None, None
-
     def get_ignorants_list(self, department=None, poll_question=None):
         ignorants = []
-        poll, votes = self.__get_poll(poll_question)
+        poll, votes = utils.get_poll(self.polls, self.last_poll_id, poll_question)
         if poll is None:
             return None
 
@@ -59,29 +48,23 @@ class PollModel:
 
         return ignorants
 
-    def __get_stats(self, user_id, poll_question):
-        num_attends = 0
-        num_polls = 0
-        for p, v in self.polls.values():
-            if poll_question.lower() in p.question.lower() and user_id in v and 'да' in v[user_id]:
-                num_attends += 1
-            num_polls += 1
-        return 100. * (num_attends / num_polls)
-
-    def get_vote_list(self, poll_question=None):
+    def get_vote_lists(self, poll_question=None):
         students, skippers = [], []
-        poll, votes = self.__get_poll(poll_question)
+        poll, votes = utils.get_poll(self.polls, self.last_poll_id, poll_question)
         if poll is None:
             return None, None
 
         for user in user_model.users.values():
             if user.id not in votes:
-                probability = self.__get_stats(user.id, poll.question)
+                probability = utils.get_probability(self.polls, user.id, poll.question)
                 students.append((user, probability)) if probability >= 50. else skippers.append((user, probability))
-            elif 'да' in votes[user.id]:
-                students.append((user, 100))
             else:
-                skippers.append((user, 0))
+                for option in votes[user.id]:
+                    if 'не' in option.lower():
+                        skippers.append((user, 0))
+                        break
+                else:
+                    students.append((user, 100))
         return students, skippers
 
 
