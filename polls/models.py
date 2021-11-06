@@ -1,4 +1,5 @@
 import pickle
+from datetime import datetime
 
 from telebot.types import Poll
 
@@ -26,7 +27,9 @@ class PollModel:
 
     @connector
     def add_poll(self, poll: Poll):
-        self.cursor.execute("""INSERT INTO polls VALUE (%s, %s, %s)""", (poll.id, pickle.dumps((poll, {})), None))
+        self.cursor.execute("""INSERT INTO polls VALUE (%s, %s, %s)""", (poll.id,
+                                                                         pickle.dumps((poll, {})),
+                                                                         datetime.utcnow()))
         self.polls[poll.id] = (poll, {})
         self.last_poll_id = poll.id
 

@@ -69,13 +69,13 @@ def send_vote_list(message, question=None):
     if students is None:
         bot.send_message(message.chat.id, 'Опрос не найден')
         return
-    students = [f'{user.last_name} {user.first_name} {f"({p:5.2f}%)" if isinstance(p, float) else ""}'
+    students = [f'{f"{p:3.0f}%" if isinstance(p, float) else " (+)"} {user.last_name} {user.first_name}'
                 for (user, p) in sorted(students, key=lambda x: (x[0].department[::-1], x[0].last_name))]
-    skippers = [f'{user.last_name} {user.first_name} {f"({p:5.2f}%)" if isinstance(p, float) else ""}'
+    skippers = [f'{f"{100 - p:3.0f}%" if isinstance(p, float) else " (-)"} {user.last_name} {user.first_name}'
                 for (user, p) in sorted(skippers, key=lambda x: (x[0].department[::-1], x[0].last_name))]
 
-    bot.send_message(message.chat.id, 'Будут:\n<pre>' + '\n'.join(students) + '</pre>' +
-                     'Не будут:\n<pre>' + '\n'.join(skippers) + '</pre>', parse_mode='html')
+    bot.send_message(message.chat.id, f'Будет: {len(students)}\n<pre>' + '\n'.join(students) + '</pre>\n\n' +
+                     f'Не будет: {len(skippers)}\n<pre>' + '\n'.join(skippers) + '</pre>', parse_mode='html')
 
 
 @bot.message_handler(commands=['stats'])
@@ -87,4 +87,3 @@ def poll_stats(message):
         send_vote_list(message, question=question)
     except ValueError:
         send_vote_list(message)
-
