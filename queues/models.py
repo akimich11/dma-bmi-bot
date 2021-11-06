@@ -41,7 +41,7 @@ class QueueModel:
     def __init__(self):
         self.cursor = None
         self.conn = None
-        self.last_queue = None
+        self.last_queue_name = None
         self.queues = dict()
         self._read_database()
 
@@ -54,14 +54,14 @@ class QueueModel:
                 self.queues[name] = Queue(name=name,
                                           positions=pickle.loads(queue_str))
                 if is_last == 1:
-                    self.last_queue = name
+                    self.last_queue_name = name
                     
     @connector
     def _update_last_queue(self, name):
-        if self.last_queue == name:
+        if self.last_queue_name == name:
             return
-        old_last_queue = self.last_queue
-        self.last_queue = name
+        old_last_queue = self.last_queue_name
+        self.last_queue_name = name
         self.cursor.execute("""UPDATE queues SET is_last=1 WHERE subject=(%s)""",
                             (name,))
         if old_last_queue is not None:
@@ -85,8 +85,8 @@ class QueueModel:
             return None
         self.queues.pop(name)
         self.cursor.execute("""DELETE FROM queues WHERE subject=(%s)""", (name,))
-        if self.last_queue == name:
-            self.last_queue = None
+        if self.last_queue_name == name:
+            self.last_queue_name = None
 
     @connector
     def _update_queue(self, queue: Queue):
@@ -149,7 +149,7 @@ class QueueModel:
         
     def _get_queue(self, name):
         if name is None:
-            name = self.last_queue
+            name = self.last_queue_name
         if name in self.queues:
             return self.queues[name]
         else:

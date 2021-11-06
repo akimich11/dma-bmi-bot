@@ -117,13 +117,11 @@ def remove_queue(message):
 
         
 def _can_convert_to_int(s):
-    answer = False
     try:
         int(s)
-        answer = True
+        return True
     except ValueError:
-        pass
-    return answer
+        return False
     
 def _parse_args(text, with_pos=False):
     args = text.split(maxsplit=(2 if with_pos else 1))
