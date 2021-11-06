@@ -64,26 +64,36 @@ def tag_dma(message):
         send_ignorants_list(message, 'БМИ')
 
 
-def send_vote_list(message, question=None):
+def send_vote_list(message, question=None, sort_by_department=True):
     students, skippers = poll_model.get_vote_lists(question)
     if students is None:
         bot.send_message(message.chat.id, 'Опрос не найден')
         return
     students = [f'{f"{p:3.0f}%" if isinstance(p, float) else " (+)"} {user.last_name} {user.first_name}'
-                for (user, p) in sorted(students, key=lambda x: (x[0].department[::-1], x[0].last_name))]
+                for (user, p) in sorted(students,
+                                        key=lambda x: (x[0].department[::-1], x[0].last_name) if sort_by_department
+                                        else x[0].last_name)]
     skippers = [f'{f"{100 - p:3.0f}%" if isinstance(p, float) else " (-)"} {user.last_name} {user.first_name}'
-                for (user, p) in sorted(skippers, key=lambda x: (x[0].department[::-1], x[0].last_name))]
+                for (user, p) in sorted(skippers,
+                                        key=lambda x: (x[0].department[::-1], x[0].last_name) if sort_by_department
+                                        else x[0].last_name)]
 
     bot.send_message(message.chat.id, f'Будет: {len(students)}\n<pre>' + '\n'.join(students) + '</pre>\n\n' +
                      f'Не будет: {len(skippers)}\n<pre>' + '\n'.join(skippers) + '</pre>', parse_mode='html')
 
 
-@bot.message_handler(commands=['stats'])
+@bot.message_handler(commands=['stats', 'stats_dma_bmi'])
 @exception_handler
 @admin_only
 def poll_stats(message):
     try:
         command, question = message.text.split(maxsplit=1)
-        send_vote_list(message, question=question)
+        if command == '/stats':
+            send_vote_list(message, question, sort_by_department=False)
+        else:
+            send_vote_list(message, question)
     except ValueError:
-        send_vote_list(message)
+        if message.text.split('@')[0] == '/stats':
+            send_vote_list(message, sort_by_department=False)
+        else:
+            send_vote_list(message)
