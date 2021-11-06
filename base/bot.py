@@ -10,6 +10,8 @@ class MdaBot(TeleBot):
 
     def send_poll(self, *args, **kwargs) -> types.Message:
         result = super(MdaBot, self).send_poll(*args, **kwargs)
+        self.unpin_all_chat_messages(config.MDA_ID)
+        self.pin_chat_message(config.MDA_ID, result.message_id)
         poll_model.add_poll(result.poll)
         return result
 
