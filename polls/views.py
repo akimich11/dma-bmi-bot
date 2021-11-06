@@ -17,7 +17,7 @@ def reply(message):
                   )
 
 
-def send_poll_stats(message, department=None, question=None):
+def send_ignorants_list(message, department=None, question=None):
     users = poll_model.get_ignorants_list(department, question)
     if users is None:
         bot.send_message(message.chat.id, 'Опрос не найден')
@@ -37,9 +37,9 @@ def send_poll_stats(message, department=None, question=None):
 def tag(message):
     try:
         command, question = message.text.split(maxsplit=1)
-        send_poll_stats(message, question=question)
+        send_ignorants_list(message, question=question)
     except ValueError:
-        send_poll_stats(message)
+        send_ignorants_list(message)
 
 
 @bot.message_handler(commands=['tag_dma'])
@@ -48,9 +48,9 @@ def tag(message):
 def tag_dma(message):
     try:
         command, question = message.text.split(maxsplit=1)
-        send_poll_stats(message, 'ДМА', question)
+        send_ignorants_list(message, 'ДМА', question)
     except ValueError:
-        send_poll_stats(message, 'ДМА')
+        send_ignorants_list(message, 'ДМА')
 
 
 @bot.message_handler(commands=['tag_bmi'])
@@ -59,6 +59,39 @@ def tag_dma(message):
 def tag_dma(message):
     try:
         command, question = message.text.split(maxsplit=1)
-        send_poll_stats(message, 'БМИ', question)
+        send_ignorants_list(message, 'БМИ', question)
     except ValueError:
-        send_poll_stats(message, 'БМИ')
+        send_ignorants_list(message, 'БМИ')
+
+
+def send_vote_list(message, question=None, sort_by_department=True):
+    students, skippers = poll_model.get_vote_lists(question)
+    if students is None:
+        bot.send_message(message.chat.id, 'Опрос не найден')
+        return
+    sort_key = lambda x: (x[0].department[::-1], x[0].last_name) if sort_by_department else x[0].last_name
+
+    students = [f'{f"{p:3.0f}%" if isinstance(p, float) else " (+)"} {user.last_name} {user.first_name}'
+                for (user, p) in sorted(students, key=sort_key)]
+    skippers = [f'{f"{100 - p:3.0f}%" if isinstance(p, float) else " (-)"} {user.last_name} {user.first_name}'
+                for (user, p) in sorted(skippers, key=sort_key)]
+
+    bot.send_message(message.chat.id, f'Будет: {len(students)}\n<pre>' + '\n'.join(students) + '</pre>\n\n' +
+                     f'Не будет: {len(skippers)}\n<pre>' + '\n'.join(skippers) + '</pre>', parse_mode='html')
+
+
+@bot.message_handler(commands=['stats', 'stats_dma_bmi'])
+@exception_handler
+@admin_only
+def poll_stats(message):
+    try:
+        command, question = message.text.split(maxsplit=1)
+        if command == '/stats':
+            send_vote_list(message, question, sort_by_department=False)
+        else:
+            send_vote_list(message, question)
+    except ValueError:
+        if message.text.split('@')[0] == '/stats':
+            send_vote_list(message, sort_by_department=False)
+        else:
+            send_vote_list(message)

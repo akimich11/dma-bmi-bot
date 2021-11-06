@@ -1,8 +1,10 @@
 import pickle
+from datetime import datetime
 
 from telebot.types import Poll
 
 from base.decorators.db import connector
+from polls import utils
 from users.models import user_model
 
 
@@ -16,7 +18,7 @@ class PollModel:
 
     @connector
     def __read_database(self):
-        self.cursor.execute("""SELECT * FROM polls""")
+        self.cursor.execute("""SELECT * FROM polls order by creation_date""")
         data = self.cursor.fetchall()
         if data:
             for poll in data:
@@ -25,7 +27,9 @@ class PollModel:
 
     @connector
     def add_poll(self, poll: Poll):
-        self.cursor.execute("""INSERT INTO polls VALUE (%s, %s)""", (poll.id, pickle.dumps((poll, {}))))
+        self.cursor.execute("""INSERT INTO polls VALUE (%s, %s, %s)""", (poll.id,
+                                                                         pickle.dumps((poll, {})),
+                                                                         datetime.utcnow()))
         self.polls[poll.id] = (poll, {})
         self.last_poll_id = poll.id
 
@@ -36,18 +40,9 @@ class PollModel:
 
     def get_ignorants_list(self, department=None, poll_question=None):
         ignorants = []
-        if poll_question is not None:
-            for p, v in self.polls.values():
-                if poll_question.lower() in p.question.lower():
-                    poll, votes = p, v
-                    break
-            else:
-                return None
-        else:
-            if self.last_poll_id is not None:
-                poll, votes = self.polls[self.last_poll_id]
-            else:
-                return None
+        poll, votes = utils.get_poll(self.polls, self.last_poll_id, poll_question)
+        if poll is None:
+            return None
 
         for user in user_model.users.values():
             if user.id not in votes and (
@@ -55,6 +50,25 @@ class PollModel:
                 ignorants.append(user)
 
         return ignorants
+
+    def get_vote_lists(self, poll_question=None):
+        students, skippers = [], []
+        poll, votes = utils.get_poll(self.polls, self.last_poll_id, poll_question)
+        if poll is None:
+            return None, None
+
+        for user in user_model.users.values():
+            if user.id not in votes:
+                probability = utils.get_probability(self.polls, user.id, poll.question)
+                students.append((user, probability)) if probability >= 50. else skippers.append((user, probability))
+            else:
+                for option in votes[user.id]:
+                    if 'не' in option.lower():
+                        skippers.append((user, 0))
+                        break
+                else:
+                    students.append((user, 100))
+        return students, skippers
 
 
 poll_model = PollModel()
