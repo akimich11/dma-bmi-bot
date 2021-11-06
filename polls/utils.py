@@ -18,10 +18,7 @@ def get_probability(polls, user_id, poll_question):
         question_to_find = poll_question.split()[0].lower().replace('/', '')
         real_question = poll.question.lower().replace('/', '')
         if question_to_find in real_question and user_id in votes:
-            for option in votes[user_id]:
-                if 'не' in option.lower():
-                    break
-            else:
+            if poll.options[0].text.lower() in votes[user_id]:  # first option is always 'yes'
                 num_attends += 1
             num_polls += 1
     if not num_polls:
