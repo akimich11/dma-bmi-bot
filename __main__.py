@@ -18,10 +18,12 @@ def schedule_check():
     cleared = False
     while True:
         schedule.run_pending()
-        if datetime.utcnow().day == 1 and not cleared:
+        now = datetime.utcnow()
+        today_midnight = now.replace(hour=0, minute=2, second=0, microsecond=0)
+        if now.day == 1 and now < today_midnight and not cleared:
             skips.views.clear_skips()
             cleared = True
-        if datetime.utcnow().day == 2:
+        if now.day == 2:
             cleared = False
         time.sleep(30)
 
