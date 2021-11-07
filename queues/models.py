@@ -33,9 +33,6 @@ class Queue:
             return None
         return 'Это место уже занято'
 
-    def remove(self, user_id):
-        self.positions.pop(user_id)
-
 
 class QueueModel:
     def __init__(self):
@@ -53,9 +50,9 @@ class QueueModel:
             for _, name, queue_str, is_last in data:
                 self.queues[name] = Queue(name=name,
                                           positions=pickle.loads(queue_str))
-                if is_last == 1:
+                if is_last:
                     self.last_queue_name = name
-                    
+
     @connector
     def _update_last_queue(self, name):
         if self.last_queue_name == name:
@@ -71,13 +68,13 @@ class QueueModel:
     @connector
     def add_queue(self, queue: Queue):
         if queue.name in self.queues:
-    	    status.handler.error('Очередь с таким именем уже существует')
-    	    return
+            status.handler.error('Очередь с таким именем уже существует')
+            return
         self.cursor.execute("""INSERT INTO queues VALUE (%s, %s, %s, %s)""",
                             (None, queue.name, pickle.dumps(queue.positions), 1))
         self.queues[queue.name] = queue
         self._update_last_queue(queue.name)
-        
+
     @connector
     def remove_queue(self, name):
         queue = self._get_queue(name)
@@ -114,10 +111,10 @@ class QueueModel:
         elif user_id not in queue.positions:
             status.handler.error('Тебя и так нет в этой очереди')
         elif user_id in user_model.users:
-            queue.remove(user_id)
+            queue.positions.pop(user_id)
             self._update_queue(queue)
             return queue.name
-            
+
         return None
 
     def move(self, name, user_id, pos):
@@ -138,15 +135,15 @@ class QueueModel:
         if queue is not None:
             queue.positions.clear()
             self._update_queue(queue)
-            
+
     def get_queue(self, name):
         queue = self._get_queue(name)
         self._update_last_queue(queue.name)
         return str(queue)
-       
+
     def get_all_queues(self):
         return '\n'.join([f'{i + 1}. {name}' for i, name in enumerate(self.queues.keys())])
-        
+
     def _get_queue(self, name):
         if name is None:
             name = self.last_queue_name

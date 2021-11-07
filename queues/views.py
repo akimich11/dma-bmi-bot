@@ -11,7 +11,7 @@ def sign_up(message):
     res_name, res_pos = None, None
     user_id = message.from_user.id
     status.handler.success_msg = '{} {} теперь в очереди на {}, позиция: {}'
-    
+
     try:
         command, name, pos = _parse_args(message.text, with_pos=True)
         if command.startswith('/sign_up'):
@@ -20,15 +20,15 @@ def sign_up(message):
             res_name, res_pos = queue_model.move(name, user_id, pos)
     except ValueError:
         status.handler.error(status.VALUE_ERROR)
-        
+
     status.handler.send_and_reset(message.chat.id, success_args=[
-            user_model.users[user_id].first_name,
-            user_model.users[user_id].last_name,
-            res_name,
-            res_pos,
+        user_model.users[user_id].first_name,
+        user_model.users[user_id].last_name,
+        res_name,
+        res_pos,
     ])
-        
-        
+
+
 @bot.message_handler(commands=['cancel'])
 @exception_handler
 def cancel_sign_up(message):
@@ -40,11 +40,11 @@ def cancel_sign_up(message):
         res_name = queue_model.cancel_sign_up(name, user_id)
     except ValueError:
         status.handler.error(status.VALUE_ERROR)
-        
+
     status.handler.send_and_reset(message.chat.id, success_args=[
-            user_model.users[user_id].first_name,
-            user_model.users[user_id].last_name,
-            res_name,
+        user_model.users[user_id].first_name,
+        user_model.users[user_id].last_name,
+        res_name,
     ])
 
 
@@ -58,15 +58,16 @@ def send_queue(message):
         queue_str = queue_model.get_queue(name)
     except ValueError:
         status.handler.error(status.VALUE_ERROR)
-        
+
     status.handler.send_and_reset(message.chat.id, success_args=[queue_str])
-        
+
+
 @bot.message_handler(commands=['queues'])
 @exception_handler
 def send_queues(message):
     bot.send_message(message.chat.id,
                      ('Как же я люблю очереди, вот они слева направо:\n'
-                         + queue_model.get_all_queues()))
+                      + queue_model.get_all_queues()))
 
 
 @bot.message_handler(commands=['add_queue'])
@@ -84,7 +85,7 @@ def add_queue(message):
             queue_model.add_queue(Queue(name.lower().capitalize()))
     except ValueError:
         status.handler.error(status.VALUE_ERROR)
-        
+
     status.handler.send_and_reset(message.chat.id)
 
 
@@ -98,10 +99,10 @@ def clear_queue(message):
         queue_model.clear_queue(name)
     except ValueError:
         status.handler.error(status.VALUE_ERROR)
-        
+
     status.handler.send_and_reset(message.chat.id)
-    
-    
+
+
 @bot.message_handler(commands=['remove_queue'])
 @exception_handler
 @admin_only
@@ -112,20 +113,21 @@ def remove_queue(message):
         queue_model.remove_queue(name)
     except ValueError:
         status.handler.error(status.VALUE_ERROR)
-        
+
     status.handler.send_and_reset(message.chat.id)
 
-        
+
 def _can_convert_to_int(s):
     try:
         int(s)
         return True
     except ValueError:
         return False
-    
+
+
 def _parse_args(text, with_pos=False):
     args = text.split(maxsplit=(2 if with_pos else 1))
-    
+
     command = args[0]
     name, pos = None, None
     for arg in args[1:]:
@@ -135,7 +137,7 @@ def _parse_args(text, with_pos=False):
             pos = int(arg)
         else:
             raise ValueError()
-            
+
     if with_pos:
         return command, name, pos
     else:
