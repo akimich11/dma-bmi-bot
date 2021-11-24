@@ -8,13 +8,14 @@ from polls.models import poll_model
 @exception_handler
 @admin_only
 def reply(message):
-    poll = message.poll
-    bot.send_poll(chat_id=config.MDA_ID,
-                  question=poll.question,
-                  options=[option.text for option in poll.options],
-                  is_anonymous=False,
-                  allows_multiple_answers=poll.allows_multiple_answers
-                  )
+    if message.chat.id > 0:
+        poll = message.poll
+        bot.send_poll(chat_id=config.MDA_ID,
+                      question=poll.question,
+                      options=[option.text for option in poll.options],
+                      is_anonymous=False,
+                      allows_multiple_answers=poll.allows_multiple_answers
+                      )
 
 
 def send_ignorants_list(message, department=None, question=None):
