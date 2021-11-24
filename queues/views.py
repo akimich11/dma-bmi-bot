@@ -37,7 +37,8 @@ def cancel_sign_up(message):
     status.handler.success_msg = '{} {} теперь не в очереди на {}'
     try:
         command, name = _parse_args(message.text)
-        res_name = queue_model.cancel_sign_up(name, user_id, is_shift=command == 'shift')
+        res_name = queue_model.cancel_sign_up(name, user_id,
+                                              is_shift=command.split('@')[0] == '/shift')
     except ValueError:
         status.handler.error(status.VALUE_ERROR)
 
