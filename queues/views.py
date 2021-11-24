@@ -29,7 +29,7 @@ def sign_up(message):
     ])
 
 
-@bot.message_handler(commands=['cancel'])
+@bot.message_handler(commands=['cancel', 'shift'])
 @exception_handler
 def cancel_sign_up(message):
     res_name = None
@@ -37,7 +37,7 @@ def cancel_sign_up(message):
     status.handler.success_msg = '{} {} теперь не в очереди на {}'
     try:
         command, name = _parse_args(message.text)
-        res_name = queue_model.cancel_sign_up(name, user_id)
+        res_name = queue_model.cancel_sign_up(name, user_id, is_shift=command == 'shift')
     except ValueError:
         status.handler.error(status.VALUE_ERROR)
 

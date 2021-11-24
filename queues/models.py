@@ -33,6 +33,11 @@ class Queue:
             return None
         return 'Это место уже занято'
 
+    def shift(self, user_pos):
+        for u_id, position in self.positions.items():
+            if position > user_pos:
+                self.positions[u_id] -= 1
+
 
 class QueueModel:
     def __init__(self):
@@ -104,14 +109,17 @@ class QueueModel:
                 return queue.name, queue.positions[user_id]
         return None, None
 
-    def cancel_sign_up(self, name, user_id):
+    def cancel_sign_up(self, name, user_id, is_shift=False):
         queue = self._get_queue(name)
         if queue is None:
             return None
         elif user_id not in queue.positions:
             status.handler.error('Тебя и так нет в этой очереди')
         elif user_id in user_model.users:
+            user_pos = queue.positions[user_id]
             queue.positions.pop(user_id)
+            if is_shift:
+                queue.shift(user_pos)
             self._update_queue(queue)
             return queue.name
 
