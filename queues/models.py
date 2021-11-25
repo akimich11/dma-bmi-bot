@@ -3,7 +3,7 @@ from base.decorators.db import connector
 from queues import status
 from users.models import user_model
 
-MAX_QUEUE_SIZE = 30
+MAX_QUEUE_SIZE = 32
 
 
 class Queue:
