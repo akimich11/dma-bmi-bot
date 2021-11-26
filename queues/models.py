@@ -25,13 +25,13 @@ class Queue:
         if pos is None:
             pos = 1 if not self.positions else max(self.positions.values()) + 1
             if pos > MAX_QUEUE_SIZE:
-                return 'Похоже, кто-то уже занял самое последнее место'
+                status.handler.error('Похоже, кто-то уже занял самое последнее место')
         if pos <= 0 or pos > MAX_QUEUE_SIZE:
-            return 'не-не-не'
+            status.handler.error('не-не-не')
         if pos not in self.positions.values():
             self.positions[user_id] = pos
-            return None
-        return 'Это место уже занято'
+        else:
+            status.handler.error('Это место уже занято')
 
     def shift(self, user_pos):
         for u_id, position in self.positions.items():
@@ -103,8 +103,8 @@ class QueueModel:
         elif user_id in queue.positions:
             status.handler.error('Ты уже есть в очереди')
         elif user_id in user_model.users:
-            result = queue.add_to_pos(user_id, pos)
-            if result is None:
+            queue.add_to_pos(user_id, pos)
+            if status.handler.ok:
                 self._update_queue(queue)
                 return queue.name, queue.positions[user_id]
         return None, None
@@ -132,8 +132,8 @@ class QueueModel:
         elif user_id not in queue.positions:
             status.handler.error('Тебя нет в этой очереди. Используй /sign_up')
         elif user_id in user_model.users:
-            result = queue.add_to_pos(user_id, pos)
-            if result is None:
+            queue.add_to_pos(user_id, pos)
+            if status.handler.ok:
                 self._update_queue(queue)
                 return queue.name, queue.positions[user_id]
         return None, None
