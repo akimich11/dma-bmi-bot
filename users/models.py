@@ -28,7 +28,8 @@ class UserModel:
         column_names = [column[0] for column in self.cursor.description]
         if data is not None:
             for row in data:
-                self.users[row[0]] = User(**dict(zip(column_names, row)))
+                kwargs = dict(zip(column_names, row))
+                self.users[kwargs['id']] = User(**kwargs)
             for user in self.users.values():
                 self.last_names[user.last_name] = user
 
