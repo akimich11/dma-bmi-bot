@@ -1,3 +1,5 @@
+import datetime
+
 from base.decorators.db import connector
 
 
@@ -11,6 +13,7 @@ class User:
         self.department = kwargs['department'].lower()
         self.skips_month = kwargs['skips_month']
         self.skips_semester = kwargs['skips_semester']
+        self.birthday = kwargs['birthday']
 
 
 class UserModel:
@@ -67,6 +70,11 @@ class UserModel:
             self.last_names[last_name].is_admin = make_admin
             return True
         return False
+
+    @connector
+    def update_next_birthday(self, user):
+        user.birthday = user.birthday.replace(user.birthday.year + 1)
+        self.cursor.execute("""UPDATE users SET birthday=(%s) where id=(%s)""", (user.birthday, user.id))
 
 
 user_model = UserModel()
