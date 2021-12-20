@@ -125,6 +125,28 @@ class QueueModel:
 
         return None
 
+    def shift_queue(self, name):
+        queue = self._get_queue(name)
+        if queue is None:
+            return None
+        min_pos = min(queue.positions.values())
+        for u_id in queue.positions:
+            if queue.positions[u_id] == min_pos:
+                user_pos, user_id = queue.positions[u_id], u_id
+                break
+        else:
+            return None
+        if user_id in user_model.users:
+            queue.positions.pop(user_id)
+            queue.shift(user_pos)
+            self._update_queue(queue)
+            user = user_model.users[user_id]
+            return queue.name, user.first_name, user.last_name
+
+        return None
+
+
+
     def move(self, name, user_id, pos):
         queue = self._get_queue(name)
         if queue is None:

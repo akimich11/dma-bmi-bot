@@ -29,7 +29,7 @@ def sign_up(message):
     ])
 
 
-@bot.message_handler(commands=['cancel', 'shift'])
+@bot.message_handler(commands=['cancel', 'self_shift'])
 @exception_handler
 def cancel_sign_up(message):
     res_name = None
@@ -38,7 +38,7 @@ def cancel_sign_up(message):
     try:
         command, name = _parse_args(message.text)
         res_name = queue_model.cancel_sign_up(name, user_id,
-                                              is_shift=command.split('@')[0] == '/shift')
+                                              is_shift=command.split('@')[0] == '/self_shift')
     except ValueError:
         status.handler.error(status.VALUE_ERROR)
 
@@ -46,6 +46,25 @@ def cancel_sign_up(message):
         user_model.users[user_id].first_name,
         user_model.users[user_id].last_name,
         res_name,
+    ])
+
+
+@bot.message_handler(commands=['shift_queue'])
+@exception_handler
+@admin_only
+def shift_first(message):
+    queue_name, first_name, last_name = None, None, None
+    status.handler.success_msg = '{} {} теперь не в очереди на {}'
+    try:
+        command, name = _parse_args(message.text)
+        queue_name, first_name, last_name = queue_model.shift_queue(name)
+    except ValueError:
+        status.handler.error(status.VALUE_ERROR)
+
+    status.handler.send_and_reset(message.chat.id, success_args=[
+        first_name,
+        last_name,
+        queue_name,
     ])
 
 
