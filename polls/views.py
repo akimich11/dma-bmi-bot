@@ -2,13 +2,14 @@ import config
 from base.bot import bot
 from base.decorators.common import exception_handler, admin_only
 from polls.models import poll_model
+from users.models import user_model
 
 
 @bot.message_handler(content_types=['poll'])
 @exception_handler
-@admin_only
 def reply(message):
-    if message.chat.id > 0:
+    user = user_model.users.get(message.from_user.id)
+    if message.chat.id > 0 and user is not None and user.is_admin:
         poll = message.poll
         bot.send_poll(chat_id=config.MDA_ID,
                       question=poll.question,
