@@ -1,17 +1,17 @@
-import config
 from base.bot import bot
 from base.decorators.common import exception_handler, admin_only
-from polls.models import poll_model
-from users.models import user_model
+from polls.db import PollService
+from users.db import UserService
 
 
 @bot.message_handler(content_types=['poll'])
 @exception_handler
 def reply(message):
-    user = user_model.users.get(message.from_user.id)
-    if message.chat.id > 0 and user is not None and user.is_admin:
+    is_admin = UserService.get_is_admin(message.from_user.id)
+    if message.chat.id > 0 and is_admin:
+        chat_id = UserService.get_group_chat_id(message.from_user.id)
         poll = message.poll
-        bot.send_poll(chat_id=config.MDA_ID,
+        bot.send_poll(group_chat_id=chat_id,
                       question=poll.question,
                       options=[option.text for option in poll.options],
                       is_anonymous=False,
@@ -19,18 +19,19 @@ def reply(message):
                       )
 
 
-def send_ignorants_list(message, department=None, question=None):
-    users = poll_model.get_ignorants_list(department, question)
-    if users is None:
-        bot.send_message(message.chat.id, 'Опрос не найден')
-    elif users:
+def send_ignorants_list(message, question=None):
+    if question is None:
+        question = PollService.get_last_poll_question(message.from_user.id)
+    chat_id = UserService.get_group_chat_id(message.chat.id) if message.chat.id > 0 else message.chat.id
+    ignorants = PollService.get_ignorants_list(chat_id, question)
+    if ignorants:
         bot.send_message(message.chat.id, f'Не проголосовали:\n' +
                          '\n'.join([
-                             f'<a href="tg://user?id={user.id}">{user.first_name} {user.last_name}</a>'
-                             for user in users]), parse_mode='html')
+                             f'<a href="tg://user?id={user_id}">{first_name} {last_name}</a>'
+                             for user_id, first_name, last_name in ignorants]), parse_mode='html')
 
     else:
-        bot.send_message(message.chat.id, 'Все проголосовали. Горжусь вами!')
+        bot.send_message(message.chat.id, 'Ну либо такого опроса нет, либо все проголосовали')
 
 
 @bot.message_handler(commands=['tag'])
@@ -44,56 +45,32 @@ def tag(message):
         send_ignorants_list(message)
 
 
-@bot.message_handler(commands=['tag_dma'])
-@exception_handler
-@admin_only
-def tag_dma(message):
-    try:
-        command, question = message.text.split(maxsplit=1)
-        send_ignorants_list(message, 'ДМА', question)
-    except ValueError:
-        send_ignorants_list(message, 'ДМА')
-
-
-@bot.message_handler(commands=['tag_bmi'])
-@exception_handler
-@admin_only
-def tag_dma(message):
-    try:
-        command, question = message.text.split(maxsplit=1)
-        send_ignorants_list(message, 'БМИ', question)
-    except ValueError:
-        send_ignorants_list(message, 'БМИ')
-
-
-def send_vote_list(message, question=None, sort_by_department=True):
-    students, skippers = poll_model.get_vote_lists(question)
-    if students is None:
+def send_vote_list(message, question=None):
+    if question is None:
+        question = PollService.get_last_poll_question(message.from_user.id)
+    students, skippers, ignorants = PollService.get_vote_lists(message.from_user.id, question)
+    if not students and not skippers and not ignorants:
         bot.send_message(message.chat.id, 'Опрос не найден')
         return
-    sort_key = lambda x: (x[0].department[::-1], x[0].last_name) if sort_by_department else x[0].last_name
 
-    students = [f'{f"{p:3.0f}%" if isinstance(p, float) else " (+)"} {user.last_name} {user.first_name}'
-                for (user, p) in sorted(students, key=sort_key)]
-    skippers = [f'{f"{100 - p:3.0f}%" if isinstance(p, float) else " (-)"} {user.last_name} {user.first_name}'
-                for (user, p) in sorted(skippers, key=sort_key)]
+    students = [f'{last_name} {first_name}' for first_name, last_name in students]
+    skippers = [f'{last_name} {first_name}' for first_name, last_name in skippers]
+    ignorants = [f'<a href="tg://user?id={user_id}">{first_name} {last_name}</a>'
+                 for user_id, first_name, last_name in ignorants]
 
-    bot.send_message(message.chat.id, f'Будет: {len(students)}\n<pre>' + '\n'.join(students) + '</pre>\n\n' +
-                     f'Не будет: {len(skippers)}\n<pre>' + '\n'.join(skippers) + '</pre>', parse_mode='html')
+    bot.send_message(message.chat.id,
+                     f'Будет: {len(students)}\n<pre>' + '\n'.join(students) + '</pre>\n\n' +
+                     f'Не будет: {len(skippers)}\n<pre>' + '\n'.join(skippers) + '</pre>\n\n'
+                     f'Непонятно: {len(ignorants)}\n<pre>' + '\n'.join(ignorants) + '</pre>',
+                     parse_mode='html')
 
 
-@bot.message_handler(commands=['stats', 'stats_dma_bmi'])
+@bot.message_handler(commands=['stats'])
 @exception_handler
 @admin_only
 def poll_stats(message):
     try:
         command, question = message.text.split(maxsplit=1)
-        if command == '/stats':
-            send_vote_list(message, question, sort_by_department=False)
-        else:
-            send_vote_list(message, question)
+        send_vote_list(message, question)
     except ValueError:
-        if message.text.split('@')[0] == '/stats':
-            send_vote_list(message, sort_by_department=False)
-        else:
-            send_vote_list(message)
+        send_vote_list(message)

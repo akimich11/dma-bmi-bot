@@ -5,7 +5,7 @@ import schedule
 from base.bot import bot
 from schedules.utils import send_periodic_question, schedule_check, get_questions
 import skips.views
-# import polls.views
+import polls.views
 import users.views
 # import queues.views
 

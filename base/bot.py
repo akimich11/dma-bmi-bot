@@ -1,36 +1,38 @@
 from telebot import TeleBot, types
 import config
-from users.models import user_model
-from polls.models import poll_model
+from polls.db import PollService
+from users.db import UserService
 
 
 class MdaBot(TeleBot):
     def __init__(self, token):
         super().__init__(token)
 
-    def send_poll(self, *args, **kwargs) -> types.Message:
-        result = super(MdaBot, self).send_poll(*args, **kwargs)
-        self.unpin_all_chat_messages(config.MDA_ID)
-        self.pin_chat_message(config.MDA_ID, result.message_id)
-        poll_model.add_poll(result.poll)
+    def send_poll(self, group_chat_id, *args, **kwargs) -> types.Message:
+        result = super(MdaBot, self).send_poll(group_chat_id, *args, **kwargs)
+        self.unpin_all_chat_messages(group_chat_id)
+        self.pin_chat_message(group_chat_id, result.message_id)
+        PollService.create_poll(result.poll, group_chat_id)
         return result
 
     def handle_poll_answer(self, poll_answer):
-        if poll_answer.poll_id in poll_model.polls and poll_answer.user.id in user_model.users:
-            poll, votes = poll_model.polls[poll_answer.poll_id]
-            user = user_model.users[poll_answer.user.id]
-            all_answers = [option.text for option in poll.options]
-            user_answers = [all_answers[i] for i in poll_answer.option_ids]
+        poll_id = poll_answer.poll_id
+        user_id = poll_answer.user.id
+        user_name = UserService.get_name(user_id)
+        poll_question = PollService.get_poll_question(poll_id)
+
+        if poll_question is not None and user_name is not None:
+            first_name, last_name = user_name
+            poll_options = PollService.get_poll_options(poll_id)
+            user_answers = [poll_options[i] for i in poll_answer.option_ids]
             if user_answers:
                 self.send_message(config.AKIM_ID,
-                                  f'{user.first_name} {user.last_name} '
-                                  f'voted for {user_answers} in "{poll.question}" poll')
-                votes[user.id] = user_answers
+                                  f'{first_name} {last_name} '
+                                  f'voted for {user_answers} in "{poll_question}" poll')
             else:
-                self.send_message(config.AKIM_ID, f'{user.first_name} {user.last_name} retracted vote '
-                                                  f'in "{poll.question}" poll')
-                del votes[user.id]
-            poll_model.update_poll(poll, votes)
+                self.send_message(config.AKIM_ID, f'{first_name} {last_name} retracted vote '
+                                                  f'in "{poll_question}" poll')
+            PollService.update_poll(poll_id, user_id, user_answers)
 
 
 bot = MdaBot(token=config.TOKEN)
