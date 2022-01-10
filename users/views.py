@@ -1,6 +1,6 @@
 from base.bot import bot
 from base.decorators.common import exception_handler, admin_only
-from users.db import UserService
+from users.user_service import UserService
 
 
 @bot.message_handler(commands=['make_admin', 'remove_admin'])

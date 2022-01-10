@@ -7,45 +7,53 @@ from threading import Thread, Timer
 from base.bot import bot
 from base.decorators import db
 from base.decorators.common import exception_handler
+from birthdays.birthday_service import BirthdayService
 from birthdays.views import send_greetings
-from skips.periodic import check_and_clear_skips
-from users.db import UserService
+from skips.skips_service import SkipsService
+from skips.views import clear_skips
 
 
-@exception_handler
-def schedule_check():
-    is_cleared = False
-    while True:
-        schedule.run_pending()
-        is_cleared = check_and_clear_skips(is_cleared)
-        time.sleep(30)
+class ScheduleService:
+    @staticmethod
+    @exception_handler
+    def schedule_check():
+        while True:
+            schedule.run_pending()
+            time.sleep(30)
 
+    @staticmethod
+    @exception_handler
+    def send_periodic_question(question, is_multi, chat_id):
+        bot.send_poll(chat_id=chat_id,
+                      question=f'{question} {datetime.utcnow().day}.{datetime.utcnow().month}',
+                      options=['да', 'нет'],
+                      is_anonymous=False,
+                      allows_multiple_answers=is_multi
+                      )
 
-@exception_handler
-def send_periodic_question(question, is_multi, chat_id):
-    bot.send_poll(chat_id=chat_id,
-                  question=f'{question} {datetime.utcnow().day}.{datetime.utcnow().month}',
-                  options=['да', 'нет'],
-                  is_anonymous=False,
-                  allows_multiple_answers=is_multi
-                  )
+    @staticmethod
+    @db.fetch(return_type='all_tuples')
+    def get_questions(cursor=None):
+        cursor.execute("SELECT question, `utc_time`, weekday, is_multi, chat_id FROM poll_schedule "
+                       "JOIN department d on d.id = poll_schedule.department_id")
 
+    @staticmethod
+    def init_skips():
+        now = datetime.utcnow()
+        if now.day == 1 and SkipsService.get_is_skips_cleared():
+            clear_skips()
 
-@db.fetch(return_type='all_tuples')
-def get_questions(cursor=None):
-    cursor.execute("SELECT question, `utc_time`, weekday, is_multi, chat_id FROM poll_schedule "
-                   "JOIN department d on d.id = poll_schedule.department_id")
-
-
-def init_schedule():
-    questions = get_questions()
-    birthdays = UserService.get_birthdays()
-    for question_text, question_time, weekday, is_multi, chat_id in questions:
-        getattr(schedule.every(), weekday).at(question_time).do(send_periodic_question,
-                                                                question=question_text,
-                                                                chat_id=chat_id,
-                                                                is_multi=is_multi)
-    for birthday_date, first_name, last_name in birthdays:
-        delay = (birthday_date - datetime.now()).total_seconds()
-        Timer(delay, send_greetings, args=(first_name, last_name))
-    Thread(target=schedule_check).start()
+    @staticmethod
+    def init_schedule():
+        ScheduleService.init_skips()
+        questions = ScheduleService.get_questions()
+        birthdays = BirthdayService.get_all_birthdays()
+        for question_text, question_time, weekday, is_multi, chat_id in questions:
+            getattr(schedule.every(), weekday).at(question_time).do(ScheduleService.send_periodic_question,
+                                                                    question=question_text,
+                                                                    chat_id=chat_id,
+                                                                    is_multi=is_multi)
+        for birthday_date, first_name, last_name, chat_id in birthdays:
+            delay = (birthday_date - datetime.now()).total_seconds()
+            Timer(delay, send_greetings, args=(chat_id, first_name, last_name))
+        Thread(target=ScheduleService.schedule_check).start()

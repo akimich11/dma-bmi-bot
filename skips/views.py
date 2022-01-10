@@ -1,12 +1,12 @@
 from base.bot import bot
 from base.decorators.common import exception_handler, admin_only
-from users.db import UserService
+from skips.skips_service import SkipsService
 
 
 @bot.message_handler(commands=['skips'])
 @exception_handler
 def send_skips(message):
-    month, semester = UserService.get_skips(message.from_user.id)
+    month, semester = SkipsService.get_skips(message.from_user.id)
     if isinstance(month, int) and month < 6:
         bot.send_message(message.chat.id, f'Часов за месяц: {month}\n'
                                           f'Часов за семестр: {semester}',
@@ -22,7 +22,7 @@ def send_skips(message):
 @exception_handler
 def send_skips_all(message):
     data = []
-    skips_all = UserService.get_all_skips(message.chat.id)
+    skips_all = SkipsService.get_all_skips(message.chat.id)
     if skips_all is None:
         bot.send_message(message.chat.id, 'Прости, но тебя нет в базе бота')
     for first_name, last_name, month, semester in skips_all:
@@ -36,7 +36,7 @@ def send_skips_all(message):
 def inc_skips(message):
     try:
         last_names = [last_name.capitalize() for last_name in message.text.split()][1:]
-        UserService.inc_skips(last_names)
+        SkipsService.inc_skips(last_names)
         bot.send_message(message.chat.id, 'У них стало на 2 часа пропусков больше',
                          reply_to_message_id=message.id)
     except (ValueError, IndexError):
@@ -49,7 +49,7 @@ def inc_skips(message):
 def set_skips(message):
     try:
         last_name, month, semester = [last_name.capitalize() for last_name in message.text.split()][1:]
-        UserService.set_skips(last_name, int(month), int(semester))
+        SkipsService.set_skips(last_name, int(month), int(semester))
         bot.send_message(message.chat.id,
                          f'Теперь пропусков {month} за месяц и {semester} за семестр',
                          reply_to_message_id=message.id)
@@ -59,7 +59,7 @@ def set_skips(message):
 
 @exception_handler
 def clear_skips():
-    data = UserService.clear_skips()
+    data = SkipsService.clear_skips()
     for department, chat_id in data:
         bot.send_message(chat_id, f'Пропуски кафедры {department} за месяц обнулены')
 

@@ -1,7 +1,7 @@
 from telebot import TeleBot, types
 import config
-from polls.db import PollService
-from users.db import UserService
+from polls.poll_service import PollService
+from users.user_service import UserService
 
 
 class MdaBot(TeleBot):

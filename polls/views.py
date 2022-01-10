@@ -1,7 +1,7 @@
 from base.bot import bot
 from base.decorators.common import exception_handler, admin_only
-from polls.db import PollService
-from users.db import UserService
+from polls.poll_service import PollService
+from users.user_service import UserService
 
 
 @bot.message_handler(content_types=['poll'])
