@@ -33,7 +33,7 @@ class ScheduleService:
 
     @staticmethod
     @db.fetch(return_type='all_tuples')
-    def get_questions(cursor=None):
+    def get_scheduled_polls(cursor=None):
         cursor.execute("SELECT question, `utc_time`, weekday, is_multi, chat_id FROM poll_schedule "
                        "JOIN department d on d.id = poll_schedule.department_id")
 
@@ -46,14 +46,16 @@ class ScheduleService:
     @staticmethod
     def init_schedule():
         ScheduleService.init_skips()
-        questions = ScheduleService.get_questions()
+        scheduled_polls = ScheduleService.get_scheduled_polls()
         birthdays = BirthdayService.get_all_birthdays()
-        for question_text, question_time, weekday, is_multi, chat_id in questions:
-            getattr(schedule.every(), weekday).at(question_time).do(ScheduleService.send_periodic_question,
-                                                                    question=question_text,
+        if scheduled_polls is not None:
+            for question, send_time, weekday, is_multi, chat_id in scheduled_polls:
+                getattr(schedule.every(), weekday).at(send_time).do(ScheduleService.send_periodic_question,
+                                                                    question=question,
                                                                     chat_id=chat_id,
                                                                     is_multi=is_multi)
-        for birthday_date, first_name, last_name, chat_id in birthdays:
-            delay = (birthday_date - datetime.now()).total_seconds()
-            Timer(delay, send_greetings, args=(chat_id, first_name, last_name))
+        if birthdays is not None:
+            for birthday_date, first_name, last_name, chat_id in birthdays:
+                delay = (birthday_date - datetime.now()).total_seconds()
+                Timer(delay, send_greetings, args=(chat_id, first_name, last_name))
         Thread(target=ScheduleService.schedule_check).start()

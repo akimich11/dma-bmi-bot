@@ -64,7 +64,7 @@ class PollService:
                         LEFT JOIN user_vote uv ON user.id = uv.user_id
                         WHERE d.chat_id = (%s) AND p.question = (%s) AND uv.user_id IS NULL
                         ORDER BY sub_department DESC, last_name
-                        """, (group_chat_id, poll_question))
+                        """, (group_chat_id, poll_question))  # todo: исправить запрос
 
     @staticmethod
     @db.fetch(return_type='all_tuples')
@@ -77,7 +77,7 @@ class PollService:
                         JOIN poll_option po on uv.option_id = po.id
                         WHERE d.chat_id = (%s) AND p.question = (%s) AND po.text=(%s)
                         ORDER BY sub_department DESC, last_name
-                        """, (group_chat_id, poll_question, option_text))
+                        """, (group_chat_id, poll_question, option_text))  # todo: исправить запрос
 
     @staticmethod
     def get_vote_lists(group_chat_id, poll_question):

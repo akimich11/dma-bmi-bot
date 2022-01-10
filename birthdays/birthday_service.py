@@ -23,7 +23,7 @@ def get_greetings(first_name):
 
 class BirthdayService:
     @staticmethod
-    @db.fetch(return_type='all_values')
+    @db.fetch(return_type='all_tuples')
     def get_all_birthdays(cursor=None):
         cursor.execute("SELECT birthday, first_name, last_name, chat_id FROM user "
                        "JOIN department d on d.id = user.department_id WHERE birthday IS NOT NULL")
