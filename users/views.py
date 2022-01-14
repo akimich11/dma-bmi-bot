@@ -1,11 +1,11 @@
 from base.bot import bot
-from base.decorators.common import exception_handler, admin_only
+from base.decorators.common import exception_handler, access_checker
 from users.user_service import UserService
 
 
 @bot.message_handler(commands=['make_admin', 'remove_admin'])
 @exception_handler
-@admin_only
+@access_checker(admin_only=True)
 def set_admin(message):
     try:
         command, last_name = message.text.split()
