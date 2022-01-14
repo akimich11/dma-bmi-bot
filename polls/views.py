@@ -6,7 +6,7 @@ from users.user_service import UserService
 
 @bot.message_handler(content_types=['poll'])
 @exception_handler
-@access_checker
+@access_checker(admin_only=False)
 def reply(message):
     is_admin = UserService.get_is_admin(message.from_user.id)
     if message.chat.id > 0 and is_admin:

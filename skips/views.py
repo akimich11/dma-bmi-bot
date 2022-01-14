@@ -5,7 +5,7 @@ from skips.skips_service import SkipsService
 
 @bot.message_handler(commands=['skips'])
 @exception_handler
-@access_checker
+@access_checker(admin_only=False)
 def send_skips(message):
     month, semester = SkipsService.get_skips(message.from_user.id)
     if isinstance(month, int) and month < 6:
@@ -21,7 +21,7 @@ def send_skips(message):
 
 @bot.message_handler(commands=['skips_all'])
 @exception_handler
-@access_checker
+@access_checker(admin_only=False)
 def send_skips_all(message):
     data = []
     skips_all = SkipsService.get_all_skips(message.chat.id)
