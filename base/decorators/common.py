@@ -6,15 +6,19 @@ from base.bot import bot
 from users.user_service import UserService
 
 
-def admin_only(func):
-    @functools.wraps(func)
-    def wrapped(message, *args, **kwargs):
-        is_admin = UserService.get_is_admin(message.from_user.id)
-        if is_admin:
-            return func(message, *args, **kwargs)
-        else:
-            bot.send_message(message.chat.id, 'Команда доступна только старостам')
-    return wrapped
+def access_checker(admin_only=False):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapped(message, *args, **kwargs):
+            is_admin = UserService.get_is_admin(message.from_user.id)
+            if (admin_only and is_admin) or (not admin_only and is_admin is not None):
+                return func(message, *args, **kwargs)
+            elif is_admin is None:
+                bot.send_message(message.chat.id, 'Вас нет в базе, функционал бота недоступен')
+            else:
+                bot.send_message(message.chat.id, 'Команда доступна только старостам')
+        return wrapped
+    return decorator
 
 
 def exception_handler(function):

@@ -1,11 +1,12 @@
 from base.bot import bot
-from base.decorators.common import exception_handler, admin_only
+from base.decorators.common import exception_handler, access_checker
 from polls.poll_service import PollService
 from users.user_service import UserService
 
 
 @bot.message_handler(content_types=['poll'])
 @exception_handler
+@access_checker
 def reply(message):
     is_admin = UserService.get_is_admin(message.from_user.id)
     if message.chat.id > 0 and is_admin:
@@ -36,7 +37,7 @@ def send_ignorants_list(message, question=None):
 
 @bot.message_handler(commands=['tag'])
 @exception_handler
-@admin_only
+@access_checker(admin_only=True)
 def tag(message):
     try:
         command, question = message.text.split(maxsplit=1)
@@ -67,7 +68,7 @@ def send_vote_list(message, question=None):
 
 @bot.message_handler(commands=['stats'])
 @exception_handler
-@admin_only
+@access_checker(admin_only=True)
 def poll_stats(message):
     try:
         command, question = message.text.split(maxsplit=1)

@@ -2,8 +2,6 @@ from datetime import datetime
 from telebot.types import Poll
 from base.decorators import db
 
-# todo: проверки на деда
-
 
 class PollService:
     @staticmethod

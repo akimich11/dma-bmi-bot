@@ -1,10 +1,11 @@
 from base.bot import bot
-from base.decorators.common import exception_handler, admin_only
+from base.decorators.common import exception_handler, access_checker
 from skips.skips_service import SkipsService
 
 
 @bot.message_handler(commands=['skips'])
 @exception_handler
+@access_checker
 def send_skips(message):
     month, semester = SkipsService.get_skips(message.from_user.id)
     if isinstance(month, int) and month < 6:
@@ -20,11 +21,11 @@ def send_skips(message):
 
 @bot.message_handler(commands=['skips_all'])
 @exception_handler
+@access_checker
 def send_skips_all(message):
     data = []
     skips_all = SkipsService.get_all_skips(message.chat.id)
-    if skips_all is None:
-        bot.send_message(message.chat.id, 'Прости, но тебя нет в базе бота')
+
     for first_name, last_name, month, semester in skips_all:
         data.append(f'{month: 2d} {semester: 3d}  {first_name} {last_name}')
     bot.send_message(message.chat.id, 'Таблица пропусков\n\n<pre>' + '\n'.join(data) + '</pre>', parse_mode='html')
@@ -32,7 +33,7 @@ def send_skips_all(message):
 
 @bot.message_handler(commands=['inc_skips'])
 @exception_handler
-@admin_only
+@access_checker(admin_only=True)
 def inc_skips(message):
     try:
         last_names = [last_name.capitalize() for last_name in message.text.split()][1:]
@@ -45,7 +46,7 @@ def inc_skips(message):
 
 @bot.message_handler(commands=['set_skips'])
 @exception_handler
-@admin_only
+@access_checker(admin_only=True)
 def set_skips(message):
     try:
         last_name, month, semester = [last_name.capitalize() for last_name in message.text.split()][1:]
@@ -57,7 +58,6 @@ def set_skips(message):
         bot.send_message(message.chat.id, 'wrong format')
 
 
-@exception_handler
 def clear_skips():
     data = SkipsService.clear_skips()
     for department, chat_id in data:
@@ -65,6 +65,7 @@ def clear_skips():
 
 
 @bot.message_handler(commands=['new_month'])
-@admin_only
+@exception_handler
+@access_checker(admin_only=True)
 def clear(message):
     clear_skips()
