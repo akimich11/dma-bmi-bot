@@ -1,20 +1,22 @@
 import json
-import requests
+import urllib.request
 
 
 def get_greetings(first_name):
     headers = {
-        'Accept': '*/*',
         'Content-Type': 'application/json',
-        'Origin': 'https://russiannlp.github.io',
-        'Referer': 'https://russiannlp.github.io',
-        'Sec-Fetch-Mode': 'cors',
-        'Sec-Fetch-Site': 'cors-site'
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 11_4) AppleWebKit/605.1.15 '
+                      '(KHTML, like Gecko) Version/14.1.1 Safari/605.1.15',
+        'Origin': 'https://yandex.ru',
+        'Referer': 'https://yandex.ru/',
     }
-    data = {'text': f'{first_name}, с днём рождения! Желаю тебе '}
-    url = 'https://api.aicloud.sbercloud.ru/public/v1/public_inference/gpt3/predict'
 
-    greeting = requests.post(url, headers=headers, data=json.dumps(data)).json()['predictions']
-    short_greeting = greeting.split('\n\n')[0]
-    short_greeting = short_greeting[:short_greeting.find('\n')] + short_greeting[short_greeting.find('\n') + 1:]
+    api_url = 'https://zeapi.yandex.net/lab/api/yalm/text3'
+    payload = {"query": f'{first_name}, с днём рождения! Желаю тебе ', "intro": 0, "filter": 1}
+    params = json.dumps(payload).encode('utf8')
+    req = urllib.request.Request(api_url, data=params, headers=headers)
+    response = urllib.request.urlopen(req)
+
+    greeting = json.loads(response.read().decode('utf8'))['text']
+    short_greeting = payload['query'] + greeting.split('\n\n')[0].split('***')[0]
     return short_greeting
