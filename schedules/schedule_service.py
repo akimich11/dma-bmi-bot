@@ -57,5 +57,5 @@ class ScheduleService:
         if birthdays is not None:
             for birthday_date, first_name, last_name, chat_id in birthdays:
                 delay = (birthday_date - datetime.now()).total_seconds()
-                Timer(delay, send_greetings, args=(chat_id, first_name, last_name))
+                Timer(delay, send_greetings, args=(chat_id, first_name, last_name)).start()
         Thread(target=ScheduleService.schedule_check).start()
