@@ -13,6 +13,7 @@ import skips.views
 import polls.views
 import users.views
 import queues.views
+import utils.commands
 
 
 @exception_handler
