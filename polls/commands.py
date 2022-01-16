@@ -1,7 +1,7 @@
 from base.bot import bot
 from base.decorators.common import exception_handler, access_checker
-from polls.poll_service import PollService
-from users.user_service import UserService
+from polls.service import PollService
+from users.service import UserService
 
 
 @bot.message_handler(content_types=['poll'])
@@ -54,8 +54,8 @@ def send_vote_list(message, question=None):
         bot.send_message(message.chat.id, 'Опрос не найден')
         return
 
-    students = [f'{last_name} {first_name}' for first_name, last_name in students]
-    skippers = [f'{last_name} {first_name}' for first_name, last_name in skippers]
+    students = [f'{last_name} {first_name}' for _, first_name, last_name in students]
+    skippers = [f'{last_name} {first_name}' for _, first_name, last_name in skippers]
     ignorants = [f'<a href="tg://user?id={user_id}">{first_name} {last_name}</a>'
                  for user_id, first_name, last_name in ignorants]
 

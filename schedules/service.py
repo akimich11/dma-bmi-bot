@@ -7,10 +7,10 @@ from threading import Thread, Timer
 from base.bot import bot
 from base.decorators import db
 from base.decorators.common import exception_handler
-from birthdays.birthday_service import BirthdayService
-from birthdays.views import send_greetings
-from skips.skips_service import SkipsService
-from skips.views import clear_skips
+from birthdays.service import BirthdayService
+from birthdays.commands import send_greetings
+from skips.service import SkipsService
+from skips.commands import clear_skips
 
 
 class ScheduleService:
@@ -34,8 +34,8 @@ class ScheduleService:
     @staticmethod
     @db.fetch(return_type='all_tuples')
     def get_scheduled_polls(cursor=None):
-        cursor.execute("SELECT question, `utc_time`, weekday, is_multi, chat_id FROM poll_schedule "
-                       "JOIN department d on d.id = poll_schedule.department_id")
+        cursor.execute("SELECT question, utc_time, weekday, is_multi, chat_id FROM scheduled_polls "
+                       "JOIN departments d on d.id = scheduled_polls.department_id")
 
     @staticmethod
     def init_skips():
@@ -58,4 +58,6 @@ class ScheduleService:
             for birthday_date, first_name, last_name, chat_id in birthdays:
                 delay = (birthday_date - datetime.now()).total_seconds()
                 Timer(delay, send_greetings, args=(chat_id, first_name, last_name)).start()
-        Thread(target=ScheduleService.schedule_check).start()
+        thread = Thread(target=ScheduleService.schedule_check)
+        thread.daemon = True
+        thread.start()

@@ -1,17 +1,16 @@
 import functools
 from typing import Literal
-
-import mysql.connector
-import config
+import psycopg2
+import settings
 
 
 def connect(function):
     @functools.wraps(function)
     def wrapped(*args, **kwargs):
-        conn = mysql.connector.connect(host=config.HOSTNAME, database=config.DATABASE_NAME,
-                                       user=config.USER, password=config.PASSWORD)
+        conn = psycopg2.connect(host=settings.DATABASE_HOST, dbname=settings.DATABASE_NAME,
+                                user=settings.DATABASE_USER, password=settings.DATABASE_PASSWORD)
         conn.autocommit = True
-        cursor = conn.cursor(buffered=True)
+        cursor = conn.cursor()
         result = function(*args, **kwargs, cursor=cursor)
         cursor.close()
         conn.close()
@@ -24,10 +23,10 @@ def fetch(return_type: Literal['value', 'tuple', 'all_values', 'all_tuples']):
     def decorator(function):
         @functools.wraps(function)
         def wrapped(*args, **kwargs):
-            conn = mysql.connector.connect(host=config.HOSTNAME, database=config.DATABASE_NAME,
-                                           user=config.USER, password=config.PASSWORD)
+            conn = psycopg2.connect(host=settings.DATABASE_HOST, dbname=settings.DATABASE_NAME,
+                                    user=settings.DATABASE_USER, password=settings.DATABASE_PASSWORD)
             conn.autocommit = True
-            cursor = conn.cursor(buffered=True)
+            cursor = conn.cursor()
             function(*args, **kwargs, cursor=cursor)
             data = cursor.fetchone() if return_type in ['value', 'tuple'] else cursor.fetchall()
             cursor.close()

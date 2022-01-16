@@ -25,13 +25,13 @@ class BirthdayService:
     @staticmethod
     @db.fetch(return_type='all_tuples')
     def get_all_birthdays(cursor=None):
-        cursor.execute("SELECT birthday, first_name, last_name, chat_id FROM user "
-                       "JOIN department d on d.id = user.department_id WHERE birthday IS NOT NULL")
+        cursor.execute('SELECT birthday, first_name, last_name, chat_id FROM users u '
+                       'JOIN departments d on d.id = u.department_id WHERE birthday IS NOT NULL')
 
     @staticmethod
     @db.fetch(return_type='value')
     def get_birthday(last_name, cursor=None):
-        cursor.execute("SELECT birthday FROM user WHERE last_name=(%s)", (last_name,))
+        cursor.execute('SELECT birthday FROM users WHERE last_name=(%s)', (last_name,))
 
     @staticmethod
     @db.connect
@@ -39,4 +39,5 @@ class BirthdayService:
         birthday = BirthdayService.get_birthday(last_name)
         if birthday is not None:
             birthday = birthday.replace(birthday.year + 1)
-            cursor.execute("""UPDATE user SET birthday=(%s) where last_name=(%s)""", (birthday, last_name))
+            cursor.execute('UPDATE users SET birthday=(%s) where last_name=(%s)',
+                           (birthday, last_name))

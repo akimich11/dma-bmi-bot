@@ -1,7 +1,7 @@
 from telebot import TeleBot, types
-import config
-from polls.poll_service import PollService
-from users.user_service import UserService
+import settings
+from polls.service import PollService
+from users.service import UserService
 
 
 class MdaBot(TeleBot):
@@ -26,14 +26,14 @@ class MdaBot(TeleBot):
             poll_options = PollService.get_poll_options(poll_id)
             user_answers = [poll_options[i] for i in poll_answer.option_ids]
             if user_answers:
-                self.send_message(config.AKIM_ID,
+                self.send_message(settings.AKIM_ID,
                                   f'{first_name} {last_name} '
                                   f'voted for {user_answers} in "{poll_question}" poll')
             else:
-                self.send_message(config.AKIM_ID, f'{first_name} {last_name} retracted vote '
+                self.send_message(settings.AKIM_ID, f'{first_name} {last_name} retracted vote '
                                                   f'in "{poll_question}" poll')
             PollService.update_poll(poll_id, user_id, user_answers)
 
 
-bot = MdaBot(token=config.TOKEN)
+bot = MdaBot(token=settings.TOKEN)
 bot.register_poll_answer_handler(bot.handle_poll_answer, None)

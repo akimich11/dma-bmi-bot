@@ -1,9 +1,9 @@
 import functools
 import traceback
 
-import config
+import settings
 from base.bot import bot
-from users.user_service import UserService
+from users.service import UserService
 
 
 def access_checker(admin_only=False):
@@ -28,7 +28,7 @@ def exception_handler(function):
             result = function(*args, **kwargs)
             return result
         except BaseException:
-            bot.send_message(config.AKIM_ID, 'Unexpected error:\n' + traceback.format_exc())
+            bot.send_message(settings.AKIM_ID, 'Unexpected error:\n' + traceback.format_exc())
             if len(args):
                 if hasattr(args[0], 'message'):
                     chat_id = args[0].message.chat.id

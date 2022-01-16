@@ -1,5 +1,5 @@
 from base.bot import bot
-from birthdays.birthday_service import get_greetings, BirthdayService
+from birthdays.service import get_greetings, BirthdayService
 
 
 def send_greetings(chat_id, first_name, last_name):

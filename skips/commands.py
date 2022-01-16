@@ -1,6 +1,6 @@
 from base.bot import bot
 from base.decorators.common import exception_handler, access_checker
-from skips.skips_service import SkipsService
+from skips.service import SkipsService
 
 
 @bot.message_handler(commands=['skips'])
