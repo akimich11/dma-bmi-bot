@@ -26,3 +26,8 @@ class UserService:
     def set_admin(last_name, make_admin=True, cursor=None):
         last_name = last_name.capitalize()
         cursor.execute("UPDATE users SET is_admin=(%s) WHERE last_name=(%s)", (int(make_admin), last_name))
+
+    @staticmethod
+    @db.fetch(return_type='tuple')
+    def get_departments(user_id, cursor=None):
+        cursor.execute("SELECT department_id, sub_department FROM users WHERE id=%s", (user_id,))
