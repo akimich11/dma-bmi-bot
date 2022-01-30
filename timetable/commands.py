@@ -29,6 +29,6 @@ def send_timetable(call):
                               call.message.chat.id, call.message.id, reply_markup=None)
     else:
         bot.edit_message_text(f'Расписание ({weekday}, {sub_department}):\n\n<pre>' +
-                              '\n'.join([f'{time:%H:%M} | {subject:^5} | {subject_type} | {auditory}'
+                              '\n'.join([f'{time:%H:%M} | {subject:^5.5} | {subject_type} | {auditory}'
                                          for time, subject, subject_type, auditory in timetable]) + '</pre>',
                               call.message.chat.id, call.message.id, parse_mode='html', reply_markup=None)
