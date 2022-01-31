@@ -31,7 +31,7 @@ class MdaBot(TeleBot):
                                   f'voted for {user_answers} in "{poll_question}" poll')
             else:
                 self.send_message(settings.AKIM_ID, f'{first_name} {last_name} retracted vote '
-                                                  f'in "{poll_question}" poll')
+                                                    f'in "{poll_question}" poll')
             PollService.update_poll(poll_id, user_id, user_answers)
 
 
