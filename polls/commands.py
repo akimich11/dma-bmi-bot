@@ -9,7 +9,7 @@ from users.service import UserService
 @access_checker(admin_only=False)
 def reply(message):
     is_admin = UserService.get_is_admin(message.from_user.id)
-    if message.chat.id > 0 and is_admin:
+    if message.chat.id == message.from_user.id and is_admin:
         chat_id = UserService.get_group_chat_id(message.from_user.id)
         poll = message.poll
         bot.send_poll(group_chat_id=chat_id,
@@ -23,7 +23,8 @@ def reply(message):
 def send_ignorants_list(message, question=None):
     if question is None:
         question = PollService.get_last_poll_question(message.from_user.id)
-    chat_id = UserService.get_group_chat_id(message.chat.id) if message.chat.id > 0 else message.chat.id
+    user_id, chat_id = message.from_user.id, message.chat.id
+    chat_id = UserService.get_group_chat_id(chat_id) if user_id == chat_id else chat_id
     ignorants = PollService.get_ignorants_list(chat_id, question)
     if ignorants:
         bot.send_message(message.chat.id, f'Не проголосовали:\n' +

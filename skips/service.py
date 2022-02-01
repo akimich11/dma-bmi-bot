@@ -11,8 +11,6 @@ class SkipsService:
     @staticmethod
     @db.fetch(return_type='all_tuples')
     def get_all_skips(chat_id, cursor=None):
-        if chat_id > 0:
-            chat_id = UserService.get_group_chat_id(chat_id)
         cursor.execute("SELECT first_name, last_name, skips_month, skips_semester FROM users "
                        "JOIN departments ON users.department_id = departments.id WHERE chat_id=(%s) "
                        "ORDER BY sub_department DESC, last_name",
