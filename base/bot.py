@@ -23,7 +23,7 @@ class MdaBot(TeleBot):
 
         if poll_question is not None and user_name is not None:
             first_name, last_name = user_name
-            poll_options = PollService.get_poll_options(poll_id)
+            poll_options = PollService.get_options_by_poll_id(poll_id)
             user_answers = [poll_options[i] for i in poll_answer.option_ids]
             if user_answers:
                 self.send_message(settings.AKIM_ID,
@@ -31,7 +31,7 @@ class MdaBot(TeleBot):
                                   f'voted for {user_answers} in "{poll_question}" poll')
             else:
                 self.send_message(settings.AKIM_ID, f'{first_name} {last_name} retracted vote '
-                                                  f'in "{poll_question}" poll')
+                                                    f'in "{poll_question}" poll')
             PollService.update_poll(poll_id, user_id, user_answers)
 
 
