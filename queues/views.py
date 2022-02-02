@@ -39,6 +39,8 @@ def cancel_sign_up(message):
         command, name = _parse_args(message.text)
         res_name = queue_model.cancel_sign_up(name, user_id,
                                               is_shift=command.split('@')[0] == '/self_shift')
+        if res_name is None:
+            raise ValueError
     except ValueError:
         status.handler.error(status.VALUE_ERROR)
 

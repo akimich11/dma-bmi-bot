@@ -145,8 +145,6 @@ class QueueModel:
 
         return None
 
-
-
     def move(self, name, user_id, pos):
         queue = self._get_queue(name)
         if queue is None:
