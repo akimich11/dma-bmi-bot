@@ -1,24 +1,22 @@
 from base.decorators import db
 
-# todo: проверки на деда
-
 
 class UserService:
     @staticmethod
     @db.fetch(return_type='value')
-    def get_group_chat_id(user_id, cursor=None):
+    def get_group_chat_id(user_id, cursor):
         cursor.execute("SELECT departments.chat_id FROM users "
                        "JOIN departments ON users.department_id = departments.id "
                        "WHERE users.id=(%s)", (user_id,))
 
     @staticmethod
     @db.fetch(return_type='tuple')
-    def get_name(user_id, cursor=None):
+    def get_name(user_id, cursor):
         cursor.execute("SELECT first_name, last_name FROM users WHERE id=(%s)", (user_id,))
 
     @staticmethod
     @db.fetch(return_type='value')
-    def get_is_admin(user_id, cursor=None):
+    def get_is_admin(user_id, cursor):
         cursor.execute("SELECT is_admin FROM users WHERE id=(%s)", (user_id,))
 
     @staticmethod
