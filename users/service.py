@@ -26,6 +26,11 @@ class UserService:
         cursor.execute("UPDATE users SET is_admin=(%s) WHERE last_name=(%s)", (int(make_admin), last_name))
 
     @staticmethod
+    @db.fetch(return_type='tuple')
+    def get_departments(user_id, cursor=None):
+        cursor.execute("SELECT department_id, sub_department FROM users WHERE id=%s", (user_id,))
+
+    @staticmethod
     @db.fetch(return_type='all_tuples')
     def get_group_list(user_id, order_by_department, cursor):
         if order_by_department:
