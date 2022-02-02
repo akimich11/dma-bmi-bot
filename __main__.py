@@ -4,7 +4,7 @@ import skips.commands
 import polls.commands
 import users.commands
 import utils.commands
-# import queues.views
+import queues.commands
 from schedules.service import ScheduleService
 
 if __name__ == '__main__':
