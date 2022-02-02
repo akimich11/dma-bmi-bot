@@ -55,7 +55,9 @@ def send_vote_list(message, question=None):
     if question is None:
         question = PollService.get_last_poll_question(message.from_user.id)
     try:
-        options, votes = PollService.get_vote_lists(message.from_user.id, question)
+        user_id, chat_id = message.from_user.id, message.chat.id
+        chat_id = UserService.get_group_chat_id(chat_id) if user_id == chat_id else chat_id
+        options, votes = PollService.get_vote_lists(chat_id, question)
         poll_stats = []
         for option, votes_for_option in zip(options, votes):
             if votes_for_option is not None:
