@@ -18,7 +18,7 @@ def sign_up(message):
         if command.startswith('/sign_up'):
             res_name, res_pos = QueueService.sign_up(message.chat.id, name, user_id, pos)
         else:
-            res_name, res_pos = queue_model.move(message.chat.id, name, user_id, pos)
+            res_name, res_pos = QueueService.move(message.chat.id, name, user_id, pos)
     except ValueError:
         raise QueueException(VALUE_ERROR_MSG)
 
@@ -31,66 +31,67 @@ def sign_up(message):
 @access_checker(admin_only=False)
 @queue_exception_handler
 def cancel_sign_up(message):
-    res_name = None
     user_id = message.from_user.id
-    status.handler.success_msg = '{} {} теперь не в очереди на {}'
     try:
         command, name = _parse_args(message.text)
-        res_name = queue_model.cancel_sign_up(name, user_id,
-                                              is_shift=command.split('@')[0] == '/self_shift')
-        if res_name is None:
-            raise ValueError
+        res_name = QueueService.cancel_sign_up(message.chat.id, name, user_id,
+                                              is_shift=command.startswith('/self_shift'))
     except ValueError:
         raise QueueException(VALUE_ERROR_MSG)
 
-    status.handler.send_and_reset(message.chat.id, success_args=[
-        user_model.users[user_id].first_name,
-        user_model.users[user_id].last_name,
-        res_name,
-    ])
+    first_name, last_name = UserService.get_name(user_id)
+    bot.send_message(message.chat.id,
+        f'{first_name} {last_name} теперь не в очереди на {res_name}')
 
 
 @bot.message_handler(commands=['shift_queue'])
 @exception_handler
 @access_checker(admin_only=True)
+@queue_exception_handler
 def shift_first(message):
-    queue_name, first_name, last_name = None, None, None
-    status.handler.success_msg = '{} {} теперь не в очереди на {}'
     try:
         command, name = _parse_args(message.text)
-        queue_name, first_name, last_name = queue_model.shift_queue(name)
+        res_name, user_id = QueueService.shift_first(message.chat.id, name)
     except ValueError:
         raise QueueException(VALUE_ERROR_MSG)
 
-    status.handler.send_and_reset(message.chat.id, success_args=[
-        first_name,
-        last_name,
-        queue_name,
-    ])
+    first_name, last_name = UserService.get_name(user_id)
+    bot.send_message(message.chat.id,
+        f'{first_name} {last_name} теперь не в очереди на {res_name}')
 
 
 @bot.message_handler(commands=['queue'])
 @exception_handler
 @access_checker(admin_only=False)
+@queue_exception_handler
 def send_queue(message):
-    queue_str = None
-    status.handler.success_msg = '{}'
     try:
         command, name = _parse_args(message.text)
-        queue_str = queue_model.get_queue(name)
+        res_name, queue_data = QueueService.get_queue_data(message.chat.id, name)
     except ValueError:
         raise QueueException(VALUE_ERROR_MSG)
 
-    status.handler.send_and_reset(message.chat.id, success_args=[queue_str])
+    if queue_data is None or not queue_data:
+        bot.send_message(message.chat.id,
+                         f'{res_name}. Очередь пока пустая, занимай пока не поздно')
+    else:
+        queue_rows = []
+        for i, user_id in queue_data:
+            first_name, last_name = UserService.get_name(user_id)
+            queue_rows.append(f'{i}. {first_name} {last_name}')
+        bot.send_message(message.chat.id,
+            f'{res_name}\nОчередь:\n' + '\n'.join(queue_rows))
 
 
 @bot.message_handler(commands=['queues'])
 @exception_handler
 @access_checker(admin_only=False)
+@queue_exception_handler
 def send_queues(message):
+    queues = QueueService.get_all_queues(message.chat.id)
+    queues_str = '\n'.join([f'{i + 1}. {name}' for i, name in enumerate(queues)])
     bot.send_message(message.chat.id,
-                     ('Как же я люблю очереди, вот они слева направо:\n'
-                      + queue_model.get_all_queues()))
+                     f'Как же я люблю очереди, вот они слева направо:\n{queues_str}')
 
 
 @bot.message_handler(commands=['add_queue'])
@@ -115,15 +116,15 @@ def add_queue(message):
 @bot.message_handler(commands=['clear_queue'])
 @exception_handler
 @access_checker(admin_only=True)
+@queue_exception_handler
 def clear_queue(message):
-    status.handler.success_msg = 'Очередь очищена'
     try:
         command, name = _parse_args(message.text)
-        queue_model.clear_queue(name)
+        QueueService.clear_queue(message.chat.id, name)
     except ValueError:
         raise QueueException(VALUE_ERROR_MSG)
 
-    status.handler.send_and_reset(message.chat.id)
+    bot.send_message(message.chat.id, 'Очередь очищена')
 
 
 @bot.message_handler(commands=['remove_queue'])
