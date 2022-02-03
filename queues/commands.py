@@ -50,7 +50,7 @@ def cancel_sign_up(message):
 @queue_exception_handler
 def shift_first(message):
     try:
-        command, name = _parse_args(message.text)
+        _, name = _parse_args(message.text)
         res_name, user_id = QueueService.shift_first(message.chat.id, name)
     except ValueError:
         raise QueueException(VALUE_ERROR_MSG)
@@ -66,7 +66,7 @@ def shift_first(message):
 @queue_exception_handler
 def send_queue(message):
     try:
-        command, name = _parse_args(message.text)
+        _, name = _parse_args(message.text)
         res_name, queue_data = QueueService.get_queue_data(message.chat.id, name)
     except ValueError:
         raise QueueException(VALUE_ERROR_MSG)
@@ -100,7 +100,7 @@ def send_queues(message):
 @queue_exception_handler
 def add_queue(message):
     try:
-        command, name = message.text.split(maxsplit=1)
+        _, name = message.text.split(maxsplit=1)
         if _can_convert_to_int(name):
             raise QueueException('Не умею называть очереди числами :(')
         elif ' ' in name:
@@ -119,7 +119,7 @@ def add_queue(message):
 @queue_exception_handler
 def clear_queue(message):
     try:
-        command, name = _parse_args(message.text)
+        _, name = _parse_args(message.text)
         QueueService.clear_queue(message.chat.id, name)
     except ValueError:
         raise QueueException(VALUE_ERROR_MSG)
@@ -133,7 +133,7 @@ def clear_queue(message):
 @queue_exception_handler
 def remove_queue(message):
     try:
-        command, name = _parse_args(message.text)
+        _, name = _parse_args(message.text)
         QueueService.remove_queue(message.chat.id, name)
     except ValueError:
         raise QueueException(VALUE_ERROR_MSG)
