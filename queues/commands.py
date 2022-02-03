@@ -156,7 +156,7 @@ def _parse_args(text, with_pos=False):
     name, pos = None, None
     for arg in args[1:]:
         if not _can_convert_to_int(arg):
-            name = arg.lower().capitalize()
+            name = arg.lower()
         elif with_pos:
             pos = int(arg)
         else:
