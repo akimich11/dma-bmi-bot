@@ -16,12 +16,12 @@ class QueueService:
                        
     @staticmethod
     @db.connect
-    def check_user_in_queue(queue_id, user_id, expected, cursor):
+    def check_user_in_queue(queue_id, user_id, is_expected, cursor):
         cursor.execute("SELECT * FROM queue_positions WHERE user_id=(%s) AND queue_id=(%s)",
                        (user_id, queue_id))
-        if expected and cursor.fetchone() is None:
+        if is_expected and cursor.fetchone() is None:
             raise QueueException('Тебя нет в очереди')
-        if not expected and cursor.fetchone() is not None:
+        if not is_expected and cursor.fetchone() is not None:
             raise QueueException('Ты уже есть в очереди')
                        
     @staticmethod
@@ -50,10 +50,10 @@ class QueueService:
             cursor.execute("SELECT position FROM queue_positions WHERE queue_id=(%s) ORDER BY position",
                            (queue_id,))
             positions = cursor.fetchall()
-            positions = [0] + [pos_tuple[0] for pos_tuple in positions]
-            for i, i_pos in enumerate(positions[1:]):
-                if i_pos - positions[i] > 1:
-                    pos = positions[i] + 1
+            positions = [pos_tuple[0] for pos_tuple in positions]
+            for i, i_pos in enumerate(positions):
+                if i + 1 != i_pos:
+                    pos = i + 1
                     break
             if pos is None:
                 pos = positions[-1] + 1
@@ -146,10 +146,10 @@ class QueueService:
         queue_id, queue_name = QueueService.get_queue_id_or_last(queue_name, department_id)
         
         
-        cursor.execute("DELETE FROM queue_positions WHERE id IN "
-                       "(SELECT id WHERE queue_id=(%s) ORDER BY position LIMIT 1) "
+        cursor.execute("DELETE FROM queue_positions WHERE queue_id=(%s) AND "
+                       "position=(SELECT MIN(position) FROM queue_positions WHERE queue_id=(%s)) "
                        "RETURNING user_id",
-                       (queue_id,))
+                       (queue_id, queue_id))
         user_id = cursor.fetchone()
         if user_id is None:
             raise QueueException('Очередь и так пустая')

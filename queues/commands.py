@@ -106,7 +106,7 @@ def add_queue(message):
         elif ' ' in name:
             raise QueueException('Ограничьте свою фантазию одним словом')
         else:
-            QueueService.create_queue(message.chat.id, name.lower().capitalize())
+            QueueService.create_queue(message.chat.id, name.lower())
     except ValueError:
         raise QueueException(VALUE_ERROR_MSG)
 
