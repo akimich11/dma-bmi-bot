@@ -1,6 +1,7 @@
 from base.bot import bot
 from base.decorators.common import exception_handler, access_checker
 from skips.service import SkipsService
+from users.service import UserService
 
 
 @bot.message_handler(commands=['skips'])
@@ -24,7 +25,9 @@ def send_skips(message):
 @access_checker(admin_only=False)
 def send_skips_all(message):
     data = []
-    skips_all = SkipsService.get_all_skips(message.chat.id)
+    user_id, chat_id = message.from_user.id, message.chat.id
+    chat_id = UserService.get_group_chat_id(chat_id) if user_id == chat_id else chat_id
+    skips_all = SkipsService.get_all_skips(chat_id)
 
     for first_name, last_name, month, semester in skips_all:
         data.append(f'{month: 2d} {semester: 3d}  {first_name} {last_name}')

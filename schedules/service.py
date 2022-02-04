@@ -33,7 +33,7 @@ class ScheduleService:
 
     @staticmethod
     @db.fetch(return_type='all_tuples')
-    def get_scheduled_polls(cursor=None):
+    def get_scheduled_polls(cursor):
         cursor.execute("SELECT question, utc_time, weekday, is_multi, chat_id FROM scheduled_polls "
                        "JOIN departments d on d.id = scheduled_polls.department_id")
 
