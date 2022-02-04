@@ -50,10 +50,10 @@ class QueueService:
             cursor.execute("SELECT position FROM queue_positions WHERE queue_id=(%s) ORDER BY position",
                            (queue_id,))
             positions = cursor.fetchall()
-            positions = [0] + [pos_tuple[0] for pos_tuple in positions]
+            positions = [pos_tuple[0] for pos_tuple in positions]
             for i, i_pos in enumerate(positions):
-                if i != i_pos:
-                    pos = i
+                if i + 1 != i_pos:
+                    pos = i + 1
                     break
             if pos is None:
                 pos = positions[-1] + 1
@@ -85,8 +85,7 @@ class QueueService:
         department_id = QueueService.get_department_id(group_chat_id)
         if QueueService.get_queue_id(queue_name, department_id) is not None:
             raise QueueException('Очередь с таким именем уже существует')
-        cursor.execute("INSERT INTO queues (is_last, name, department_id) "
-                       "VALUES (%s, %s, %s) RETURNING id",
+        cursor.execute("INSERT INTO queues VALUES (%s, %s, %s) RETURNING id",
                        (1, queue_name, department_id))
         QueueService.set_last_queue(cursor.fetchone()[0], department_id)
             
@@ -105,8 +104,7 @@ class QueueService:
         pos = QueueService.check_pos(department_id, queue_id, pos)
         QueueService.check_user_in_queue(queue_id, user_id, False)
             
-        cursor.execute("INSERT INTO queue_positions (position, queue_id, user_id) "
-                       "VALUES (%s, %s, %s)",
+        cursor.execute("INSERT INTO queue_positions VALUES (%s, %s, %s)",
                        (pos, queue_id, user_id))
         QueueService.set_last_queue(queue_id, department_id)
         return queue_name, pos
