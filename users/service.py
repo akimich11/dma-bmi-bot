@@ -41,3 +41,9 @@ class UserService:
             cursor.execute("SELECT last_name, first_name FROM users "
                            "WHERE department_id=(SELECT department_id from users WHERE id=%s) "
                            "ORDER BY last_name", (user_id,))
+        
+    @staticmethod
+    @db.fetch(return_type='value')
+    def get_user_count(department_id, cursor):
+        cursor.execute("SELECT COUNT(*) FROM users WHERE department_id=(%s)", (department_id,))
+        
