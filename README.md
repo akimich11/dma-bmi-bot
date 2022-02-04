@@ -99,169 +99,141 @@ Make your university life easier with this Telegram bot!
 4. Run the following script:
 
   ```sql
-  create sequence queue_id_seq
+create sequence queue_id_seq
     as integer;
-
-alter sequence queue_id_seq owner to postgres;
 
 create sequence user_queue_id_seq
     as integer;
 
-alter sequence user_queue_id_seq owner to postgres;
-
 create sequence poll_option_id_seq
     as integer;
-
-alter sequence poll_option_id_seq owner to postgres;
 
 create sequence user_vote_id_seq
     as integer;
 
-alter sequence user_vote_id_seq owner to postgres;
-
 create table departments
 (
-    chat_id integer,
-    name    text,
     id      integer not null
         constraint department_pk
-            primary key
+            primary key,
+    chat_id integer,
+    name    text
+
+
 );
 
-alter table departments
-    owner to postgres;
 
 create table polls
 (
-    created_at    timestamp,
-    question      text,
+    id            char(50) not null
+        constraint poll_pk
+            primary key,
     department_id integer
         constraint poll_department_id_fk
             references departments
             on update cascade on delete cascade,
-    id            char(50) not null
-        constraint poll_pk
-            primary key
+    question      text,
+    created_at    timestamp
 );
-
-alter table polls
-    owner to postgres;
 
 create table users
 (
-    birthday       timestamp,
-    skips_semester integer,
-    skips_month    integer,
-    is_admin       smallint,
-    sub_department char(3),
+    id             integer not null
+        constraint user_pk
+            primary key,
+
+    first_name     text,
+    last_name      varchar(20),
     department_id  integer
         constraint user_department_id_fk
             references departments
             on update cascade on delete cascade,
-    last_name      varchar(20),
-    first_name     text,
-    id             integer not null
-        constraint user_pk
-            primary key
+    sub_department char(3),
+    is_admin       smallint,
+    skips_month    integer,
+    skips_semester integer,
+    birthday       timestamp
 );
-
-alter table users
-    owner to postgres;
 
 create unique index user_last_name_uindex
     on users (last_name);
 
 create table queues
 (
-    is_last       smallint,
-    name          text,
+    id            integer default nextval('queue_id_seq'::regclass) not null
+        constraint queue_pk
+            primary key,
     department_id integer
         constraint queue_department_id_fk
             references departments
             on update cascade on delete cascade,
-    id            integer default nextval('queue_id_seq'::regclass) not null
-        constraint queue_pk
-            primary key
+    name          text,
+    is_last       smallint
 );
-
-alter table queues
-    owner to postgres;
 
 alter sequence queue_id_seq owned by queues.id;
 
 create table scheduled_polls
 (
-    utc_time      timestamp,
-    weekday       char(9),
-    is_multi      smallint,
-    question      text,
+    id            integer not null
+        constraint poll_schedule_pk
+            primary key,
     department_id integer
         constraint poll_schedule_department_id_fk
             references departments
             on update cascade on delete cascade,
-    id            integer not null
-        constraint poll_schedule_pk
-            primary key
+    question      text,
+    is_multi      smallint,
+    weekday       char(9),
+    utc_time      timestamp
 );
-
-alter table scheduled_polls
-    owner to postgres;
 
 create table poll_options
 (
-    text    text,
+    id      integer default nextval('poll_option_id_seq'::regclass) not null
+        constraint poll_option_pk
+            primary key,
     poll_id char(50)
         constraint poll_option_poll_id_fk
             references polls
             on update cascade on delete cascade,
-    id      integer default nextval('poll_option_id_seq'::regclass) not null
-        constraint poll_option_pk
-            primary key
+    text    text
 );
-
-alter table poll_options
-    owner to postgres;
 
 alter sequence poll_option_id_seq owned by poll_options.id;
 
 create table queue_positions
 (
-    position integer,
-    queue_id integer
-        constraint user_queue_queue_id_fk
-            references queues
-            on update cascade on delete cascade,
+    id       integer default nextval('user_queue_id_seq'::regclass) not null
+        constraint user_queue_pk
+            primary key,
     user_id  integer
         constraint user_queue_user_id_fk
             references users
             on update cascade on delete cascade,
-    id       integer default nextval('user_queue_id_seq'::regclass) not null
-        constraint user_queue_pk
-            primary key
+    queue_id integer
+        constraint user_queue_queue_id_fk
+            references queues
+            on update cascade on delete cascade,
+    position integer
 );
-
-alter table queue_positions
-    owner to postgres;
 
 alter sequence user_queue_id_seq owned by queue_positions.id;
 
 create table users_poll_options
 (
-    option_id integer
-        constraint user_vote_poll_option_id_fk
-            references poll_options
-            on update cascade on delete cascade,
+    id        integer default nextval('user_vote_id_seq'::regclass) not null
+        constraint user_vote_pk
+            primary key,
     user_id   integer
         constraint user_vote_user_id_fk
             references users
             on update cascade on delete cascade,
-    id        integer default nextval('user_vote_id_seq'::regclass) not null
-        constraint user_vote_pk
-            primary key
+    option_id integer
+        constraint user_vote_poll_option_id_fk
+            references poll_options
+            on update cascade on delete cascade
 );
-
-alter table users_poll_options
-    owner to postgres;
 
 alter sequence user_vote_id_seq owned by users_poll_options.id;
 
@@ -281,9 +253,6 @@ create table timetables
     auditory       varchar(255),
     type           char
 );
-
-alter table timetables
-    owner to postgres;
   ```
 
 5. Fill database with some test data. 
