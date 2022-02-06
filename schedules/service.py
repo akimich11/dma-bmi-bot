@@ -24,8 +24,8 @@ class ScheduleService:
     @staticmethod
     @exception_handler
     def send_periodic_question(question, is_multi, chat_id):
-        bot.send_poll(chat_id=chat_id,
-                      question=f'{question} {datetime.utcnow().day}.{datetime.utcnow().month}',
+        bot.send_poll(group_chat_id=chat_id,
+                      question=f'{question} {datetime.utcnow().day:0>2}.{datetime.utcnow().month:0>2}',
                       options=['да', 'нет'],
                       is_anonymous=False,
                       allows_multiple_answers=is_multi
@@ -50,10 +50,10 @@ class ScheduleService:
         birthdays = BirthdayService.get_all_birthdays()
         if scheduled_polls is not None:
             for question, send_time, weekday, is_multi, chat_id in scheduled_polls:
-                getattr(schedule.every(), weekday).at(send_time).do(ScheduleService.send_periodic_question,
-                                                                    question=question,
-                                                                    chat_id=chat_id,
-                                                                    is_multi=is_multi)
+                getattr(schedule.every(), weekday).at(f'{send_time:%H:%M}').do(ScheduleService.send_periodic_question,
+                                                                               question=question,
+                                                                               chat_id=chat_id,
+                                                                               is_multi=is_multi)
         if birthdays is not None:
             for birthday_date, first_name, last_name, chat_id in birthdays:
                 delay = (birthday_date - datetime.now()).total_seconds()
