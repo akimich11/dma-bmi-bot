@@ -24,7 +24,7 @@ class ScheduleService:
     @staticmethod
     @exception_handler
     def send_periodic_question(question, is_multi, chat_id):
-        bot.send_poll(chat_id=chat_id,
+        bot.send_poll(group_chat_id=chat_id,
                       question=f'{question} {datetime.utcnow().day}.{datetime.utcnow().month}',
                       options=['да', 'нет'],
                       is_anonymous=False,
