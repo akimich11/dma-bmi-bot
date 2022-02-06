@@ -28,7 +28,9 @@ def send_timetable(call):
         bot.edit_message_text(f'{weekday}: пар нет, повезло-повезло',
                               call.message.chat.id, call.message.id, reply_markup=None)
     else:
-        bot.edit_message_text(f'Расписание ({weekday}, {sub_department}):\n\n<pre>' +
-                              '\n'.join([f'{time:%H:%M} | {subject:^5.5} | {subject_type} | {auditory}'
-                                         for time, subject, subject_type, auditory in timetable]) + '</pre>',
-                              call.message.chat.id, call.message.id, parse_mode='html', reply_markup=None)
+        message_text = f'Расписание ({weekday}, {sub_department}):\n\n<pre>' + \
+                       '\n'.join([f'{time:%H:%M} | {subject:^5.5} | {subject_type} | {auditory}'
+                                  for time, subject, subject_type, auditory in timetable]) + '</pre>'
+        if message_text != call.message.text:
+            bot.edit_message_text(message_text, call.message.chat.id, call.message.id,
+                                  parse_mode='html', reply_markup=None)
