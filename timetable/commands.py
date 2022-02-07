@@ -1,10 +1,9 @@
 from base.bot import bot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton as Button
 
-from base.decorators.common import exception_handler, access_checker
+from base.decorators import exception_handler, access_checker
 from timetable.service import TimetableService
 from users.service import UserService
-
 
 WEEKDAYS = ('Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота')
 
@@ -27,7 +26,7 @@ def send_timetable_markup(message):
 @bot.callback_query_handler(func=lambda call: not call.data.startswith('Вся неделя'))
 @exception_handler
 @access_checker(admin_only=False)
-def send_timetable(call):
+def send_timetable_for_day(call):
     try:
         weekday, department_id = call.data.rsplit(maxsplit=1)
         sub_department = UserService.get_sub_department(department_id)
@@ -53,7 +52,7 @@ def send_timetable(call):
 @bot.callback_query_handler(func=lambda call: call.data.startswith('Вся неделя'))
 @exception_handler
 @access_checker(admin_only=False)
-def send_timetable(call):
+def send_timetable_for_week(call):
     try:
         department_id = int(call.data.split()[-1])
         sub_department = UserService.get_sub_department(department_id)

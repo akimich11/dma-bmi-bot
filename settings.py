@@ -16,4 +16,4 @@ else:
     DATABASE_HOST = url.hostname
     DATABASE_NAME = os.getenv('DATABASE_NAME')
 
-AKIM_ID = 270241310
+SUPERUSER_ID = 270241310

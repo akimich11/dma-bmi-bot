@@ -1,18 +1,18 @@
-from base.decorators import db
+from base import db
 
 
-class TimetableService:
-    @staticmethod
+class TimetableService(db.ConnectionMixin):
+    @classmethod
     @db.fetch(return_type='all_tuples')
-    def get_timetable_for_day(department_id, sub_department, weekday, cursor):
+    def get_timetable_for_day(cls, department_id, sub_department, weekday, cursor):
         cursor.execute("SELECT start_time, subject, type, auditory FROM timetables "
                        "WHERE weekday=%s AND department_id=%s AND sub_department LIKE %s "
                        "ORDER BY start_time",
                        (weekday, department_id, f'%{sub_department}%'))
 
-    @staticmethod
+    @classmethod
     @db.fetch(return_type='all_tuples')
-    def get_timetable_for_week(department_id, sub_department, cursor):
+    def get_timetable_for_week(cls, department_id, sub_department, cursor):
         cursor.execute("SELECT weekday, start_time, subject, type, auditory FROM timetables "
                        "WHERE department_id=%s AND sub_department LIKE %s "
                        "ORDER BY weekday, start_time",

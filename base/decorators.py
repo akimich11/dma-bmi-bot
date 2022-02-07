@@ -17,7 +17,9 @@ def access_checker(admin_only=False):
                 bot.send_message(message.chat.id, 'Вас нет в базе, функционал бота недоступен')
             else:
                 bot.send_message(message.chat.id, 'Команда доступна только старостам')
+
         return wrapped
+
     return decorator
 
 
@@ -28,7 +30,7 @@ def exception_handler(function):
             result = function(*args, **kwargs)
             return result
         except BaseException:
-            bot.send_message(settings.AKIM_ID, 'Unexpected error:\n' + traceback.format_exc())
+            bot.send_message(settings.SUPERUSER_ID, 'Unexpected error:\n' + traceback.format_exc())
             if len(args):
                 if hasattr(args[0], 'message'):
                     chat_id = args[0].message.chat.id
@@ -36,4 +38,5 @@ def exception_handler(function):
                     chat_id = args[0].chat.id
                 bot.send_message(chat_id, 'Unexpected error')
             return None
+
     return wrapped

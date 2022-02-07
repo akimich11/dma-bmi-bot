@@ -1,6 +1,6 @@
 import settings
 from base.bot import bot
-from base.decorators.common import access_checker
+from base.decorators import access_checker
 from users.service import UserService
 
 
@@ -16,7 +16,7 @@ def register_user(message):
                            f'first_name: {message.from_user.first_name}',
                            f'last_name: {message.from_user.last_name}']
                           )
-    bot.send_message(settings.AKIM_ID, user_data)
+    bot.send_message(settings.SUPERUSER_ID, user_data)
     bot.send_message(message.chat.id, 'Запрос на регистрацию отправлен', reply_to_message_id=message.id)
 
 
