@@ -28,3 +28,11 @@ class TimetableService:
         if not sheet:
             return f'{weekday}: пар нет, повезло-повезло\n\n'
         return weekday + '\n<pre>' + '\n'.join(sheet) + '</pre>\n\n'
+
+    @staticmethod
+    def get_pretty_timetable(timetable):
+        sheet = []
+        for time, subject, subject_type, auditory in timetable:
+            sheet.append(f'{time:%H:%M} | {subject:^5.5} | {subject_type} | {auditory}')
+
+        return '<pre>' + '\n'.join(sheet) + '</pre>'
