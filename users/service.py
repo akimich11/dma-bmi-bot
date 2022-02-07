@@ -46,4 +46,8 @@ class UserService:
     @db.fetch(return_type='value')
     def get_user_count(department_id, cursor):
         cursor.execute("SELECT COUNT(*) FROM users WHERE department_id=(%s)", (department_id,))
-        
+
+    @staticmethod
+    @db.fetch(return_type='value')
+    def get_sub_department(department_id, cursor):
+        cursor.execute("SELECT name FROM departments WHERE id=%s", (department_id,))
