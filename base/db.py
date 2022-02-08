@@ -9,9 +9,6 @@ class ConnectionMixin:
                             user=settings.DATABASE_USER, password=settings.DATABASE_PASSWORD)
     conn.autocommit = True
 
-    def __del__(self):
-        self.conn.close()
-
 
 def get_cursor(function):
     @functools.wraps(function)
