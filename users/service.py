@@ -57,5 +57,5 @@ class UserService(db.ConnectionMixin):
 
     @classmethod
     @db.fetch(return_type='value')
-    def get_sub_department(cls, department_id, cursor):
-        cursor.execute("SELECT name FROM departments WHERE id=%s", (department_id,))
+    def get_sub_department(cls, user_id, cursor):
+        cursor.execute("SELECT sub_department FROM users WHERE id=%s", (user_id,))

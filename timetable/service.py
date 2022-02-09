@@ -4,19 +4,19 @@ from base import db
 class TimetableService(db.ConnectionMixin):
     @classmethod
     @db.fetch(return_type='all_tuples')
-    def get_timetable_for_day(cls, department_id, sub_department, weekday, cursor):
+    def get_timetable_for_day(cls, sub_department, weekday, cursor):
         cursor.execute("SELECT start_time, subject, type, auditory FROM timetables "
-                       "WHERE weekday=%s AND department_id=%s AND sub_department LIKE %s "
+                       "WHERE weekday=%s AND sub_department LIKE %s "
                        "ORDER BY start_time",
-                       (weekday, department_id, f'%{sub_department}%'))
+                       (weekday, f'%{sub_department}%'))
 
     @classmethod
     @db.fetch(return_type='all_tuples')
-    def get_timetable_for_week(cls, department_id, sub_department, cursor):
+    def get_timetable_for_week(cls, sub_department, cursor):
         cursor.execute("SELECT weekday, start_time, subject, type, auditory FROM timetables "
-                       "WHERE department_id=%s AND sub_department LIKE %s "
+                       "WHERE sub_department LIKE %s "
                        "ORDER BY weekday, start_time",
-                       (department_id, f'%{sub_department}%'))
+                       (f'%{sub_department}%',))
 
     @staticmethod
     def parse_timetable_for_day(timetable, weekday):
@@ -36,3 +36,9 @@ class TimetableService(db.ConnectionMixin):
             sheet.append(f'{time:%H:%M} | {subject:^5.5} | {subject_type} | {auditory}')
 
         return '<pre>' + '\n'.join(sheet) + '</pre>'
+
+    @classmethod
+    @db.get_cursor
+    def check_if_sub_department_exists(cls, sub_department, cursor):
+        cursor.execute("SELECT id FROM timetables WHERE sub_department LIKE %s", (f'%{sub_department}%',))
+        return cursor.fetchone() is not None
