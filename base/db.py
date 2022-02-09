@@ -13,9 +13,8 @@ class ConnectionMixin:
 def get_cursor(function):
     @functools.wraps(function)
     def wrapped(cls_ref, *args, **kwargs):
-        cursor = cls_ref.conn.cursor()
-        result = function(cls_ref, *args, **kwargs, cursor=cursor)
-        cursor.close()
+        with cls_ref.conn.cursor() as cursor:
+            result = function(cls_ref, *args, **kwargs, cursor=cursor)
         return result
 
     return wrapped
@@ -25,10 +24,10 @@ def fetch(return_type: Literal['value', 'tuple', 'all_values', 'all_tuples']):
     def decorator(function):
         @functools.wraps(function)
         def wrapped(cls_ref, *args, **kwargs):
-            cursor = cls_ref.conn.cursor()
-            function(cls_ref, *args, **kwargs, cursor=cursor)
-            data = cursor.fetchone() if return_type in ['value', 'tuple'] else cursor.fetchall()
-            cursor.close()
+            with cls_ref.conn.cursor() as cursor:
+                function(cls_ref, *args, **kwargs, cursor=cursor)
+                data = cursor.fetchone() if return_type in ['value', 'tuple'] else cursor.fetchall()
+
             if return_type in ['tuple', 'all_tuples']:
                 return data if data else None
             elif return_type == 'value':

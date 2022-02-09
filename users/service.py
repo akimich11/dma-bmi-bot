@@ -4,6 +4,14 @@ from base import db
 class UserService(db.ConnectionMixin):
     @classmethod
     @db.fetch(return_type='value')
+    def get_department_id(cls, chat_id, user_id, cursor):
+        if chat_id == user_id:
+            cursor.execute("SELECT department_id FROM users WHERE id=%s", (user_id,))
+        else:
+            cursor.execute("SELECT id FROM departments WHERE chat_id=%s", (chat_id,))
+
+    @classmethod
+    @db.fetch(return_type='value')
     def get_group_chat_id(cls, user_id, cursor):
         cursor.execute("SELECT departments.chat_id FROM users "
                        "JOIN departments ON users.department_id = departments.id "
