@@ -1,5 +1,5 @@
 from base.bot import bot
-from base.decorators.common import exception_handler, access_checker
+from base.decorators import exception_handler, access_checker
 from base.exceptions import ObjectNotFound
 from polls.service import PollService
 from users.service import UserService

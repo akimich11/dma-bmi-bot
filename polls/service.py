@@ -1,18 +1,18 @@
 from datetime import datetime
 from telebot.types import Poll
-from base.decorators import db
+from base import db
 from base.exceptions import ObjectNotFound
 
 
-class PollService:
-    @staticmethod
+class PollService(db.ConnectionMixin):
+    @classmethod
     @db.fetch(return_type='value')
-    def get_department_id(group_chat_id,  cursor):
+    def get_department_id(cls, group_chat_id, cursor):
         cursor.execute("SELECT id FROM departments WHERE chat_id=(%s)", (group_chat_id,))
 
-    @staticmethod
-    @db.connect
-    def create_poll(poll: Poll, group_chat_id,  cursor):
+    @classmethod
+    @db.get_cursor
+    def create_poll(cls, poll: Poll, group_chat_id, cursor):
         department_id = PollService.get_department_id(group_chat_id)
         cursor.execute("INSERT INTO polls VALUES (%s, %s, %s, %s)", (poll.id,
                                                                      department_id,
@@ -21,9 +21,9 @@ class PollService:
         for option in poll.options:
             cursor.execute("INSERT INTO poll_options (poll_id, text) VALUES (%s, %s)", (poll.id, option.text))
 
-    @staticmethod
-    @db.connect
-    def update_poll(poll_id, user_id, user_answers,  cursor):
+    @classmethod
+    @db.get_cursor
+    def update_poll(cls, poll_id, user_id, user_answers, cursor):
         if not user_answers:
             cursor.execute("DELETE FROM users_poll_options upo USING poll_options po, polls p "
                            "WHERE user_id=(%s) AND upo.option_id=po.id AND po.poll_id=p.id AND p.id=%s",
@@ -35,28 +35,28 @@ class PollService:
                 cursor.execute("INSERT INTO users_poll_options (user_id, option_id) VALUES (%s, %s)",
                                (user_id, option_id[0]))
 
-    @staticmethod
+    @classmethod
     @db.fetch(return_type='value')
-    def get_poll_question(poll_id,  cursor):
+    def get_poll_question(cls, poll_id, cursor):
         cursor.execute("SELECT question FROM polls where id=(%s)", (poll_id,))
 
-    @staticmethod
+    @classmethod
     @db.fetch(return_type='all_values')
-    def get_options_by_poll_id(poll_id, cursor):
+    def get_options_by_poll_id(cls, poll_id, cursor):
         cursor.execute("SELECT text FROM poll_options WHERE poll_id=(%s)", (poll_id,))
 
-    @staticmethod
+    @classmethod
     @db.fetch(return_type='value')
-    def get_last_poll_question(user_id,  cursor):
+    def get_last_poll_question(cls, user_id, cursor):
         cursor.execute("SELECT department_id from users WHERE id=(%s)", (user_id,))
         department_id = cursor.fetchone()
         cursor.execute("SELECT question FROM polls WHERE department_id=(%s) "
                        "ORDER BY created_at DESC LIMIT 1",
                        department_id)
 
-    @staticmethod
+    @classmethod
     @db.fetch(return_type='all_tuples')
-    def get_ignorants_list(group_chat_id, poll_question, cursor):
+    def get_ignorants_list(cls, group_chat_id, poll_question, cursor):
         cursor.execute("SELECT id FROM polls WHERE question=%s", (poll_question,))
         if cursor.fetchone() is None:
             raise ObjectNotFound('Опрос не найден')
@@ -78,9 +78,9 @@ class PollService:
                         ORDER BY last_name
                         """, (group_chat_id, poll_question, group_chat_id))
 
-    @staticmethod
+    @classmethod
     @db.fetch(return_type='all_tuples')
-    def get_votes_for_option(group_chat_id, poll_question, option_text,  cursor):
+    def get_votes_for_option(cls, group_chat_id, poll_question, option_text, cursor):
         cursor.execute("""
                         SELECT first_name, last_name
                         FROM users
@@ -92,9 +92,9 @@ class PollService:
                         ORDER BY last_name
                         """, (group_chat_id, poll_question, option_text))
 
-    @staticmethod
+    @classmethod
     @db.fetch(return_type='all_values')
-    def get_options_by_poll_question(group_chat_id, poll_question, cursor):
+    def get_options_by_poll_question(cls, group_chat_id, poll_question, cursor):
         cursor.execute("SELECT id FROM polls WHERE question=%s", (poll_question,))
         if cursor.fetchone() is None:
             raise ObjectNotFound('Опрос не найден')

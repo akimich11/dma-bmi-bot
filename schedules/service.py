@@ -5,15 +5,36 @@ import schedule
 from threading import Thread, Timer
 
 from base.bot import bot
-from base.decorators import db
-from base.decorators.common import exception_handler
+from base import db
+from base.decorators import exception_handler
 from birthdays.service import BirthdayService
 from birthdays.commands import send_greetings
 from skips.service import SkipsService
 from skips.commands import clear_skips
 
 
-class ScheduleService:
+class ScheduleService(db.ConnectionMixin):
+    def __init__(self):
+        super().__init__()
+        self.init_skips()
+        scheduled_polls = self.get_scheduled_polls()
+        birthdays = BirthdayService.get_all_birthdays()
+        if scheduled_polls is not None:
+            for question, send_time, weekday, is_multi, chat_id in scheduled_polls:
+                getattr(schedule.every(), weekday).at(f'{send_time:%H:%M}').do(ScheduleService.send_periodic_question,
+                                                                               question=question,
+                                                                               chat_id=chat_id,
+                                                                               is_multi=is_multi)
+        if birthdays is not None:
+            for birthday_date, first_name, last_name, chat_id in birthdays:
+                delay = (birthday_date - datetime.now()).total_seconds()
+                timer = Timer(delay, send_greetings, args=(chat_id, first_name, last_name))
+                timer.daemon = True
+                timer.start()
+        thread = Thread(target=ScheduleService.schedule_check)
+        thread.daemon = True
+        thread.start()
+
     @staticmethod
     @exception_handler
     def schedule_check():
@@ -31,9 +52,9 @@ class ScheduleService:
                       allows_multiple_answers=is_multi
                       )
 
-    @staticmethod
+    @classmethod
     @db.fetch(return_type='all_tuples')
-    def get_scheduled_polls(cursor):
+    def get_scheduled_polls(cls, cursor):
         cursor.execute("SELECT question, utc_time, weekday, is_multi, chat_id FROM scheduled_polls "
                        "JOIN departments d on d.id = scheduled_polls.department_id")
 
@@ -42,22 +63,3 @@ class ScheduleService:
         now = datetime.utcnow()
         if now.day == 1 and SkipsService.get_is_skips_cleared():
             clear_skips()
-
-    @staticmethod
-    def init_schedule():
-        ScheduleService.init_skips()
-        scheduled_polls = ScheduleService.get_scheduled_polls()
-        birthdays = BirthdayService.get_all_birthdays()
-        if scheduled_polls is not None:
-            for question, send_time, weekday, is_multi, chat_id in scheduled_polls:
-                getattr(schedule.every(), weekday).at(f'{send_time:%H:%M}').do(ScheduleService.send_periodic_question,
-                                                                               question=question,
-                                                                               chat_id=chat_id,
-                                                                               is_multi=is_multi)
-        if birthdays is not None:
-            for birthday_date, first_name, last_name, chat_id in birthdays:
-                delay = (birthday_date - datetime.now()).total_seconds()
-                Timer(delay, send_greetings, args=(chat_id, first_name, last_name)).start()
-        thread = Thread(target=ScheduleService.schedule_check)
-        thread.daemon = True
-        thread.start()

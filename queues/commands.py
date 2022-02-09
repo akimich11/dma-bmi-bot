@@ -1,5 +1,5 @@
 from base.bot import bot
-from base.decorators.common import exception_handler, access_checker
+from base.decorators import exception_handler, access_checker
 from queues.errors import QueueException, queue_exception_handler
 from queues.service import QueueService
 from users.service import UserService
@@ -24,7 +24,8 @@ def sign_up(message):
 
     first_name, last_name = UserService.get_name(user_id)
     bot.send_message(message.chat.id,
-        f'{first_name} {last_name} теперь в очереди на {res_name}, позиция: {res_pos}')
+                     f'{first_name} {last_name} теперь в очереди на {res_name}, позиция: {res_pos}')
+
 
 @bot.message_handler(commands=['cancel', 'self_shift'])
 @exception_handler
@@ -35,13 +36,13 @@ def cancel_sign_up(message):
     try:
         command, name = _parse_args(message.text)
         res_name = QueueService.cancel_sign_up(message.chat.id, name, user_id,
-                                              is_shift=command.startswith('/self_shift'))
+                                               is_shift=command.startswith('/self_shift'))
     except ValueError:
         raise QueueException(VALUE_ERROR_MSG)
 
     first_name, last_name = UserService.get_name(user_id)
     bot.send_message(message.chat.id,
-        f'{first_name} {last_name} теперь не в очереди на {res_name}')
+                     f'{first_name} {last_name} теперь не в очереди на {res_name}')
 
 
 @bot.message_handler(commands=['shift_queue'])
@@ -57,7 +58,7 @@ def shift_first(message):
 
     first_name, last_name = UserService.get_name(user_id)
     bot.send_message(message.chat.id,
-        f'{first_name} {last_name} теперь не в очереди на {res_name}')
+                     f'{first_name} {last_name} теперь не в очереди на {res_name}')
 
 
 @bot.message_handler(commands=['queue'])
@@ -80,7 +81,7 @@ def send_queue(message):
             first_name, last_name = UserService.get_name(user_id)
             queue_rows.append(f'{i}. {first_name} {last_name}')
         bot.send_message(message.chat.id,
-            f'{res_name}\nОчередь:\n' + '\n'.join(queue_rows))
+                         f'{res_name}\nОчередь:\n' + '\n'.join(queue_rows))
 
 
 @bot.message_handler(commands=['queues'])
