@@ -108,3 +108,11 @@ class PollService(db.ConnectionMixin):
         options = PollService.get_options_by_poll_question(group_chat_id, poll_question)
         votes = [PollService.get_votes_for_option(group_chat_id, poll_question, option) for option in options]
         return options, votes
+
+    @classmethod
+    @db.fetch(return_type='all_values')
+    def get_options_by_scheduled_poll_question(cls, group_chat_id, question, cursor):
+        cursor.execute("SELECT text FROM scheduled_polls_options "
+                       "JOIN scheduled_polls sp on sp.id = scheduled_polls_options.scheduled_poll_id "
+                       "JOIN departments d on sp.department_id = d.id "
+                       "WHERE question=%s AND chat_id=%s", (question, group_chat_id))
