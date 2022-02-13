@@ -4,3 +4,4 @@ import users.commands
 import utils.commands
 import timetable.commands
 import queues.commands
+import deadlines.commands
