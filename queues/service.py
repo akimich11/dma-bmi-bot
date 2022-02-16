@@ -166,7 +166,7 @@ class QueueService(db.ConnectionMixin):
         department_id = QueueService.get_department_id(group_chat_id)
         queue_id, queue_name = QueueService.get_queue_id_or_last(queue_name, department_id)
 
-        cursor.execute("SELECT position, user_id FROM queue_positions WHERE queue_id=(%s)",
+        cursor.execute("SELECT position, user_id FROM queue_positions WHERE queue_id=(%s) ORDER BY position",
                        (queue_id,))
         data = cursor.fetchall()
         QueueService.set_last_queue(queue_id, department_id)
