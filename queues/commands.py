@@ -61,13 +61,13 @@ def shift_first(message):
                      f'{first_name} {last_name} теперь не в очереди на {res_name}')
 
 
-@bot.message_handler(commands=['queue'])
+@bot.message_handler(commands=['queue', 'squeezed'])
 @exception_handler
 @access_checker(admin_only=False)
 @queue_exception_handler
 def send_queue(message):
     try:
-        _, name = _parse_args(message.text)
+        command, name = _parse_args(message.text)
         res_name, queue_data = QueueService.get_queue_data(message.chat.id, name)
     except ValueError:
         raise QueueException(VALUE_ERROR_MSG)
@@ -77,9 +77,11 @@ def send_queue(message):
                          f'{res_name}. Очередь пока пустая, занимай пока не поздно')
     else:
         queue_rows = []
-        for i, user_id in queue_data:
+        for i, (pos, user_id) in enumerate(queue_data):
             first_name, last_name = UserService.get_name(user_id)
-            queue_rows.append(f'{i}. {first_name} {last_name}')
+            if command.startswith('/squeezed'):
+                pos = i + 1
+            queue_rows.append(f'{pos}. {first_name} {last_name}')
         bot.send_message(message.chat.id,
                          f'{res_name}\nОчередь:\n' + '\n'.join(queue_rows))
 
