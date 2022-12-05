@@ -8,7 +8,7 @@ if MOCK_DATABASE == 'True':
     DATABASE_USER = 'postgres'
     DATABASE_PASSWORD = 'postgres'
     DATABASE_HOST = '127.0.0.1'
-    DATABASE_NAME = 'dma_bmi_test'
+    DATABASE_NAME = 'postgres'
 else:
     url = urlparse(os.getenv('DATABASE_URL'))
     DATABASE_USER = url.username

@@ -29,7 +29,9 @@ class BirthdayService(db.ConnectionMixin):
     @db.fetch(return_type='all_tuples')
     def get_all_birthdays(cls, cursor):
         cursor.execute('SELECT birthday, first_name, last_name, chat_id FROM users u '
-                       'JOIN departments d on d.id = u.department_id WHERE birthday IS NOT NULL')
+                       'JOIN users_departments ud on u.id = ud.user_id '
+                       'JOIN departments d on d.id = ud.department_id '
+                       'WHERE birthday IS NOT NULL')
 
     @classmethod
     @db.fetch(return_type='value')

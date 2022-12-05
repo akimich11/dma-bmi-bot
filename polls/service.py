@@ -48,7 +48,9 @@ class PollService(db.ConnectionMixin):
     @classmethod
     @db.fetch(return_type='value')
     def get_last_poll_question(cls, user_id, cursor):
-        cursor.execute("SELECT department_id from users WHERE id=(%s)", (user_id,))
+        cursor.execute("SELECT department_id from users u "
+                       "JOIN users_departments ud on ud.user_id = u.id "
+                       "WHERE u.id=(%s)", (user_id,))
         department_id = cursor.fetchone()
         cursor.execute("SELECT question FROM polls WHERE department_id=(%s) "
                        "ORDER BY created_at DESC LIMIT 1",
@@ -64,7 +66,8 @@ class PollService(db.ConnectionMixin):
                         WITH voters AS (
                           SELECT users.id, first_name, last_name
                           FROM users
-                            JOIN departments d ON d.id = users.department_id
+                            JOIN users_departments ud on ud.user_id = users.id 
+                            JOIN departments d ON d.id = ud.department_id
                             JOIN users_poll_options upo ON users.id = upo.user_id
                             JOIN poll_options po ON upo.option_id = po.id
                             JOIN polls p ON p.id = po.poll_id
@@ -72,7 +75,8 @@ class PollService(db.ConnectionMixin):
                         )
                         SELECT users.id, first_name, last_name
                         FROM users
-                            JOIN departments d ON d.id = users.department_id
+                            JOIN users_departments ud on ud.user_id = users.id 
+                            JOIN departments d ON d.id = ud.department_id
                             LEFT JOIN voters USING (last_name, first_name)
                         WHERE voters.id IS NULL AND d.chat_id = %s
                         ORDER BY last_name
@@ -84,7 +88,8 @@ class PollService(db.ConnectionMixin):
         cursor.execute("""
                         SELECT first_name, last_name
                         FROM users
-                            JOIN departments d ON d.id = users.department_id
+                            JOIN users_departments ud on ud.user_id = users.id 
+                            JOIN departments d ON d.id = ud.department_id
                             JOIN users_poll_options upo ON users.id = upo.user_id
                             JOIN poll_options po ON upo.option_id = po.id
                             JOIN polls p ON p.id = po.poll_id

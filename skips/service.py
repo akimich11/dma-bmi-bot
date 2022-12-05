@@ -11,7 +11,9 @@ class SkipsService(db.ConnectionMixin):
     @db.fetch(return_type='all_tuples')
     def get_all_skips(cls, chat_id, cursor):
         cursor.execute("SELECT first_name, last_name, skips_month, skips_semester FROM users "
-                       "JOIN departments ON users.department_id = departments.id WHERE chat_id=(%s) "
+                       "JOIN users_departments ud on ud.user_id = users.id " 
+                       "JOIN departments d ON d.id = ud.department_id "
+                       "WHERE chat_id=(%s) "
                        "ORDER BY sub_department DESC, last_name",
                        (chat_id,))
 
