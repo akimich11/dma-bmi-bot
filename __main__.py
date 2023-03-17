@@ -18,7 +18,7 @@ def forward_message(message):
         "Буйвал", "Войтко", "Денгалёв", "Кацуба", "Коган", "Кузьмицкий", "Кураш", "Кучин",
         "Лукашевич", "Макаровец", "Малыщик", "Мясоеденков", "Новиков",
         "Прохоров", "Рогожников", "Сечко", "Суравежкин", "Филинович", "Филипович", "Шпилевский", "Яцевич"
-    ]:
+    ] and message.chat.id != MDA_ID:
         bot.copy_message(MDA_ID, message.chat.id, message.id)
         bot.send_message(message.chat.id, 'Сообщение переслано', reply_to_message_id=message.id)
 
